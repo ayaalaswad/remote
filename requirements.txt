@@ -1,0 +1,24 @@
+# SHARP Training - Python Dependencies
+
+# Core deep learning
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Transformers (for ViT)
+transformers>=4.30.0
+
+# Data processing
+pandas>=1.5.0
+numpy>=1.24.0
+Pillow>=9.5.0
+
+# Progress bars
+tqdm>=4.65.0
+
+# Optional: For data exploration
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Note: Install PyTorch with CUDA support:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118

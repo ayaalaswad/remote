@@ -1,0 +1,91 @@
+# SHARP Training - Git Ignore File
+
+# ============================================================================
+# Data files (DO NOT commit - too large!)
+# ============================================================================
+scene_data/
+mimic-cxr-jpg/
+*.csv.gz
+*.zip
+*.tar.gz
+
+# Experiment outputs
+sharp_experiments/
+test_run/
+test_gpu/
+experiments/
+
+# Checkpoints and models
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Large data caches
+*.pkl
+*.pickle
+manifest.pkl
+
+# PyTorch compiled
+*.pyc
+
+# Model outputs
+p3_*.pt
+p3_*.json
+*_best.pt
+*_last.pt
+*.npy
+
+# Gallery caches (can be regenerated)
+p3_gallery_*.pt
+
+# Keep these files (examples)
+!README.md
+!requirements.txt
+!*.py
+!*.md
+!*.bat
