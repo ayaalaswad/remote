@@ -8,8 +8,8 @@ Key change: batch_size = 512 (default) vs original 32
 Expected result: MP-InfoNCE should now activate properly with more co-positives per batch.
 
 Hypothesis:
-  - batch=32  → |P(i)|=1 most of the time → MP-InfoNCE = standard InfoNCE → worse
-  - batch=512 → |P(i)|>1 frequently → MP-InfoNCE advantage → better F1
+  - batch=32  -> |P(i)|=1 most of the time -> MP-InfoNCE = standard InfoNCE -> worse
+  - batch=512 -> |P(i)|>1 frequently -> MP-InfoNCE advantage -> better F1
 
 Original improvements over Phase 1/2:
   - Starts from ImageNet ViT-B/16 (clean, reproducible baseline)
@@ -58,7 +58,7 @@ except ImportError:
 
 
 class SafeToTensor:
-    """PIL→tensor without torch.from_numpy (bypasses NumPy 1.x/2.x clash)."""
+    """PIL->tensor without torch.from_numpy (bypasses NumPy 1.x/2.x clash)."""
     def __call__(self, pic):
         buf = torch.frombuffer(bytearray(pic.tobytes()), dtype=torch.uint8)
         c = len(pic.getbands())
@@ -164,8 +164,8 @@ def multi_positive_infonce(img_embs, txt_embs, concept_keys, temperature, bidire
     When |P(i)| = 1 (no batch co-positives), reduces to standard InfoNCE.
 
     Args:
-        bidirectional: If True, computes both i→t and t→i losses (like CLIP).
-                      If False, only computes i→t (original SHARP).
+        bidirectional: If True, computes both i->t and t->i losses (like CLIP).
+                      If False, only computes i->t (original SHARP).
 
     NOTE: "Negated observations are matched positive pairs (same K); hard negatives
     are mismatched confusable pairs (different K but same anatomy or same entity
@@ -184,14 +184,14 @@ def multi_positive_infonce(img_embs, txt_embs, concept_keys, temperature, bidire
         dtype=torch.float32, device=img_embs.device,
     )  # (N, N), diagonal always 1
 
-    # IMAGE → TEXT direction
+    # IMAGE -> TEXT direction
     n_pos_i2t = pos_mask.sum(dim=1)              # (N,), always >= 1
     sim_pos_avg_i2t = (sim * pos_mask).sum(dim=1) / n_pos_i2t  # (N,)
     log_denom_i2t   = torch.logsumexp(sim, dim=1)           # (N,), includes self
     loss_i2t = (-sim_pos_avg_i2t + log_denom_i2t).mean()
 
     if bidirectional:
-        # TEXT → IMAGE direction (transpose similarity matrix)
+        # TEXT -> IMAGE direction (transpose similarity matrix)
         n_pos_t2i = pos_mask.sum(dim=0)              # (N,), positives per text
         sim_pos_avg_t2i = (sim.T * pos_mask.T).sum(dim=1) / n_pos_t2i  # (N,)
         log_denom_t2i   = torch.logsumexp(sim.T, dim=1)
@@ -212,7 +212,7 @@ def multi_positive_infonce(img_embs, txt_embs, concept_keys, temperature, bidire
         avg_copositives = n_pos_i2t.float().mean().item() - 1  # subtract self
         max_copositives = n_pos_i2t.max().item() - 1
         pct_with_copositives = ((n_pos_i2t > 1).sum().item() / N) * 100
-        direction_str = "i↔t (bi)" if bidirectional else "i→t (uni)"
+        direction_str = "i<->t (bi)" if bidirectional else "i->t (uni)"
         print(f"\n   [MP-InfoNCE stats] Direction: {direction_str}, Batch size: {N}, "
               f"Avg co-positives: {avg_copositives:.2f}, "
               f"Max: {max_copositives}, "
@@ -246,7 +246,7 @@ def tokenize_text(text, vocab, max_len=30):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def load_official_split(split_csv_gz):
-    """Returns: study_to_split {int → str}, study_to_subject {int → int}."""
+    """Returns: study_to_split {int -> str}, study_to_subject {int -> int}."""
     with gzip.open(split_csv_gz, 'rt') as f:
         df = pd.read_csv(f)
     return (
@@ -426,8 +426,8 @@ class HardNegIndex:
     """
     def __init__(self, pairs, rng_seed=42):
         self.rng = random.Random(rng_seed)
-        self._by_region = defaultdict(list)          # region → [pairs]
-        self._by_re     = defaultdict(                # (region, entity) → {pol: [pairs]}
+        self._by_region = defaultdict(list)          # region -> [pairs]
+        self._by_re     = defaultdict(                # (region, entity) -> {pol: [pairs]}
             lambda: defaultdict(list)
         )
         for p in pairs:
@@ -576,7 +576,7 @@ def paired_collate_fn(batch):
     Collate function with guaranteed same-concept pairs.
 
     Ensures every batch has at least 1 co-positive pair per concept key.
-    Batch size N → N/2 concept keys, 2 instances each.
+    Batch size N -> N/2 concept keys, 2 instances each.
     """
     batch = [b for b in batch if b is not None]
     if len(batch) < 4:
@@ -682,7 +682,7 @@ def build_val_gallery(val_files, image_dir, vocab, max_pairs=2000,
         Path(cache_dir).mkdir(parents=True, exist_ok=True)
         torch.save(gi, ci)
         torch.save(gt, ct)
-        print(f"   Gallery cached → {cache_dir}")
+        print(f"   Gallery cached -> {cache_dir}")
 
     return gi, gt
 
@@ -734,7 +734,7 @@ def lr_at_step(step, warmup_steps, total_steps, base_lr, min_ratio=0.05):
 
 
 def unfreeze_lr_scale(step, unfreeze_step, ramp_steps=500):
-    """Cosine ramp for newly unfrozen ViT blocks: 0 → 1 over ramp_steps."""
+    """Cosine ramp for newly unfrozen ViT blocks: 0 -> 1 over ramp_steps."""
     if step < unfreeze_step:
         return 0.0
     delta = step - unfreeze_step
@@ -775,18 +775,18 @@ def main(args):
     print(f"Device       : {device}")
     print(f"Batch size   : {args.batch_size}  |  Grad accum: {args.grad_accum}"
           f"  |  Effective batch: {args.batch_size * args.grad_accum}")
-    print(f"Loss type    : {'Bidirectional (i↔t)' if args.bidirectional else 'Unidirectional (i→t)'}")
+    print(f"Loss type    : {'Bidirectional (i<->t)' if args.bidirectional else 'Unidirectional (i->t)'}")
     print(f"Sampling     : {'Paired (guaranteed co-pos)' if args.paired_sampling else 'Random'}")
     print(f"Total steps  : {args.total_steps:,}")
     print(f"Warmup steps : {args.warmup_steps:,}")
     print(f"Eval every   : {args.eval_every:,} steps  (patience={args.patience})")
 
     if args.bidirectional:
-        print(f"\n✅ BIDIRECTIONAL LOSS: Addresses reviewer concern (fair comparison to symmetric baseline)")
+        print(f"\n[OK] BIDIRECTIONAL LOSS: Addresses reviewer concern (fair comparison to symmetric baseline)")
     if args.paired_sampling:
-        print(f"\n✨ PAIRED SAMPLING: Tests MP-InfoNCE directly (100% guaranteed co-positives)")
+        print(f"\n[*] PAIRED SAMPLING: Tests MP-InfoNCE directly (100% guaranteed co-positives)")
     if args.batch_size >= 256:
-        print(f"\n🎯 LARGE BATCH: {args.batch_size} should provide ~60-70% natural co-positive rate")
+        print(f"\n[LARGE BATCH]: {args.batch_size} should provide ~60-70% natural co-positive rate")
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -852,7 +852,7 @@ def main(args):
         vocab = build_vocab_from_texts(texts, args.vocab_size)
         with open(vocab_path, 'w') as f:
             json.dump(vocab, f, indent=2)
-        print(f"   Vocab size: {len(vocab):,}  → {vocab_path}")
+        print(f"   Vocab size: {len(vocab):,}  -> {vocab_path}")
 
     # ── 5. Hard-negative index
     hn_index = None
@@ -889,7 +889,7 @@ def main(args):
         else:
             print(f"WARNING: Crop cache not found at {mpath}, using on-the-fly cropping (slow)")
 
-    # Build concept_key → crop_paths lookup for fast HN injection
+    # Build concept_key -> crop_paths lookup for fast HN injection
     hn_crop_lookup = defaultdict(list)
     if crop_manifest is not None:
         for entry in crop_manifest:
@@ -911,7 +911,7 @@ def main(args):
     # Choose collate function based on paired_sampling flag
     collate_function = paired_collate_fn if args.paired_sampling else collate_fn
     if args.paired_sampling:
-        print(f"\n✨ Using PAIRED SAMPLING - guaranteed co-positives!")
+        print(f"\n[*] Using PAIRED SAMPLING - guaranteed co-positives!")
         print(f"   Each batch will have {args.batch_size // 2} concept keys, 2 instances each")
 
     g = torch.Generator(); g.manual_seed(42)
@@ -976,7 +976,7 @@ def main(args):
         # Load scaler state if available (for mixed precision training)
         if 'scaler_state_dict' in ckpt_r:
             scaler.load_state_dict(ckpt_r['scaler_state_dict'])
-            print(f"   ✅ Restored GradScaler state")
+            print(f"   [OK] Restored GradScaler state")
 
         del ckpt_r
         print(f"   Resumed at step {resume_step:,}  "
@@ -1152,8 +1152,8 @@ def main(args):
             model.train()
 
             print(f"\n[step {global_step:>6}]  loss={avg_loss:.4f}  "
-                  f"I→T R@1={i2t_r1*100:.2f}%  R@5={i2t_r5*100:.2f}%  "
-                  f"T→I R@1={t2i_r1*100:.2f}%  "
+                  f"I->T R@1={i2t_r1*100:.2f}%  R@5={i2t_r5*100:.2f}%  "
+                  f"T->I R@1={t2i_r1*100:.2f}%  "
                   f"hard_frac={hn_frac:.2f}  lr={base_lr:.2e}")
 
             ckpt = {
@@ -1181,8 +1181,8 @@ def main(args):
                 best_r1      = i2t_r1
                 patience_ctr = 0
                 torch.save(ckpt, output_dir / 'p3_best.pt')
-                print(f"   🎉 New best  I→T R@1={i2t_r1*100:.2f}%  "
-                      f"→ {output_dir}/p3_best.pt")
+                print(f"   [NEW BEST] New best  I->T R@1={i2t_r1*100:.2f}%  "
+                      f"-> {output_dir}/p3_best.pt")
             else:
                 patience_ctr += 1
                 print(f"   No improvement  ({patience_ctr}/{args.patience})")
@@ -1205,13 +1205,13 @@ def main(args):
     print(f"\n{'='*80}")
     print(f"SHARP LARGE BATCH EXPERIMENT COMPLETE")
     print(f"Batch size: {args.batch_size} (effective: {args.batch_size * args.grad_accum})")
-    print(f"Best I→T R@1: {best_r1*100:.2f}%")
+    print(f"Best I->T R@1: {best_r1*100:.2f}%")
     print(f"Best checkpoint: {output_dir}/p3_best.pt")
     print(f"{'='*80}")
 
     if history:
-        print(f"\n{'Step':>8}  {'Loss':>7}  {'I→T R@1':>8}  "
-              f"{'I→T R@5':>8}  {'T→I R@1':>8}  {'T→I R@5':>8}")
+        print(f"\n{'Step':>8}  {'Loss':>7}  {'I->T R@1':>8}  "
+              f"{'I->T R@5':>8}  {'T->I R@1':>8}  {'T->I R@5':>8}")
         for row in history:
             mark = " *" if row['i2t_r1'] == best_r1 else ""
             print(f"{row['step']:>8}  {row['loss']:>7.4f}  "
@@ -1258,7 +1258,7 @@ if __name__ == "__main__":
 
     # NEW: Bidirectional loss and paired sampling
     p.add_argument("--bidirectional",  action="store_true",
-                   help="Use bidirectional InfoNCE (i↔t, like CLIP). Addresses reviewer concern.")
+                   help="Use bidirectional InfoNCE (i<->t, like CLIP). Addresses reviewer concern.")
     p.add_argument("--paired_sampling", action="store_true",
                    help="Guarantee same-concept pairs in each batch (tests MP-InfoNCE directly)")
 
