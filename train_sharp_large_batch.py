@@ -65,9 +65,9 @@ class SafeToTensor:
         return buf.reshape(pic.size[1], pic.size[0], c).permute(2, 0, 1).float().div(255.0)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Model  (same architecture as Phase 1/2 — checkpoints are compatible)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 class ImageEncoderViT(nn.Module):
     def __init__(self, embedding_dim=256):
@@ -149,9 +149,9 @@ class GraphTextCLIP(nn.Module):
         self.temperature = temperature
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Multi-positive InfoNCE loss  (Khosla et al., NeurIPS 2020 — cross-modal)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def multi_positive_infonce(img_embs, txt_embs, concept_keys, temperature, bidirectional=False):
     """
@@ -221,9 +221,9 @@ def multi_positive_infonce(img_embs, txt_embs, concept_keys, temperature, bidire
     return loss
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Tokenisation helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def build_vocab_from_texts(texts, vocab_size=10000):
     from collections import Counter
@@ -241,9 +241,9 @@ def tokenize_text(text, vocab, max_len=30):
     return torch.tensor(idxs, dtype=torch.long)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Official MIMIC-CXR split + subject-id guard
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def load_official_split(split_csv_gz):
     """Returns: study_to_split {int -> str}, study_to_subject {int -> int}."""
@@ -285,7 +285,7 @@ def partition_scene_files(scene_files, study_to_split, study_to_subject):
 
     tr, va, te = subj_per['train'], subj_per['validate'], subj_per['test']
 
-    print(f"\n{'─'*55}")
+    print(f"\n{'-'*55}")
     print(f"  Official MIMIC-CXR split")
     print(f"  Train     : {len(buckets['train']):>7,} files  "
           f"{len(tr):>6,} subjects")
@@ -307,14 +307,14 @@ def partition_scene_files(scene_files, study_to_split, study_to_subject):
             print(f"  WARNING: {len(overlap_vt)} subjects shared val/test!")
     else:
         print(f"  Subject-id disjointness: VERIFIED across all splits")
-    print(f"{'─'*55}")
+    print(f"{'-'*55}")
 
     return buckets['train'], buckets['validate'], buckets['test']
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Pair extraction (pos + neg)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 # Generic neg phrases that carry little discriminative signal
 GENERIC_NEG = {
@@ -413,9 +413,9 @@ def extract_pairs(scene, image_dir, rng=None, generic_neg_cap=0.10,
     return pairs
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Hard-negative index
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 class HardNegIndex:
     """
@@ -466,9 +466,9 @@ class HardNegIndex:
             return p if p is not None else self.sample_anatomy_hard(concept_key)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Dataset
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 class Phase3Dataset(Dataset):
     """
@@ -511,7 +511,7 @@ class Phase3Dataset(Dataset):
         return self._virtual_len
 
     def __getitem__(self, idx):
-        # ── fast path: pre-cropped cache ──────────────────────────────────────
+        # -- fast path: pre-cropped cache --------------------------------------
         if self.crop_manifest is not None:
             entry = self.crop_manifest[idx % len(self.crop_manifest)]
             try:
@@ -532,7 +532,7 @@ class Phase3Dataset(Dataset):
                 'phrase':      ph,
                 'concept_key': ck,
             }
-        # ── slow path: load from disk ─────────────────────────────────────────
+        # -- slow path: load from disk -----------------------------------------
         rng = random.Random(self._epoch_seed + idx)
         sf  = rng.choice(self.scene_files)
         try:
@@ -615,9 +615,9 @@ def paired_collate_fn(batch):
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Validation gallery
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def build_val_gallery(val_files, image_dir, vocab, max_pairs=2000,
                       image_size=224, seed=42, cache_dir=None):
@@ -689,9 +689,9 @@ def build_val_gallery(val_files, image_dir, vocab, max_pairs=2000,
     return gi, gt
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Recall@K
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 @torch.no_grad()
 def compute_recall(model, gallery_imgs, gallery_txts, device='cuda', batch_size=128):
@@ -722,9 +722,9 @@ def compute_recall(model, gallery_imgs, gallery_txts, device='cuda', batch_size=
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # LR schedule helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def lr_at_step(step, warmup_steps, total_steps, base_lr, min_ratio=0.05):
     """Linear warmup + cosine decay."""
@@ -753,18 +753,18 @@ def hard_neg_frac(step, warmup_steps, ramp_end, max_frac):
                max(1, ramp_end - warmup_steps))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Module-level worker init (must be at module scope for spawn multiprocessing)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def seed_worker(wid):
     s = torch.initial_seed() % 2**32
     np.random.seed(s); random.seed(s)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Main
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def main(args):
     cudnn.benchmark = True
@@ -803,11 +803,11 @@ def main(args):
             'args': vars(args),
         }, f, indent=2)
 
-    # ── 1. Official split
+    # -- 1. Official split
     print("\nLoading official MIMIC-CXR split...")
     study_to_split, study_to_subject = load_official_split(args.split_csv)
 
-    # ── 2. Scene file list
+    # -- 2. Scene file list
     print("Loading scene file list...")
     if args.scene_list_path and Path(args.scene_list_path).exists():
         with open(args.scene_list_path) as f:
@@ -817,12 +817,12 @@ def main(args):
         scene_files = [str(p) for p in Path(args.scene_dir).rglob("*.scene_graph.json")]
     print(f"   Total: {len(scene_files):,} scene files")
 
-    # ── 3. Partition + subject-id guard
+    # -- 3. Partition + subject-id guard
     train_files, val_files, test_files = partition_scene_files(
         scene_files, study_to_split, study_to_subject
     )
 
-    # ── 4. Vocabulary (from train files only, includes neg phrases)
+    # -- 4. Vocabulary (from train files only, includes neg phrases)
     vocab_path = output_dir / 'p3_vocab.json'
     if vocab_path.exists():
         with open(vocab_path) as f:
@@ -856,7 +856,7 @@ def main(args):
             json.dump(vocab, f, indent=2)
         print(f"   Vocab size: {len(vocab):,}  -> {vocab_path}")
 
-    # ── 5. Hard-negative index
+    # -- 5. Hard-negative index
     hn_index = None
     if args.hard_neg_max_frac > 0:
         print("\nBuilding hard-negative index (20k train files sample)...")
@@ -879,7 +879,7 @@ def main(args):
             T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ])
 
-    # ── 6. Dataset + DataLoader
+    # -- 6. Dataset + DataLoader
     crop_manifest = None
     if args.crop_cache_dir:
         mpath = Path(args.crop_cache_dir) / "manifest.pkl"
@@ -929,7 +929,7 @@ def main(args):
           f"{len(loader):,} batches/epoch  |  "
           f"Val: {len(val_files):,} files  |  Test: {len(test_files):,} files")
 
-    # ── 7. Model — start from ImageNet weights
+    # -- 7. Model — start from ImageNet weights
     print("\nCreating model (ImageNet ViT-B/16)...")
     model = GraphTextCLIP(embed_dim=256, temperature=0.07).to(device)
     model.image_encoder.freeze_all()
@@ -939,7 +939,7 @@ def main(args):
     print(f"   ViT frozen: {frozen_n:,} params")
     print(f"   Trainable (proj + text encoder): {trainable_n:,} params")
 
-    # ── 8. Optimizer
+    # -- 8. Optimizer
     head_params = (list(model.image_encoder.projection.parameters()) +
                    list(model.text_encoder.parameters()))
     optimizer = AdamW(
@@ -950,7 +950,7 @@ def main(args):
     vit_unfrozen = False
     resume_step  = 0
 
-    # ── 8b. Resume from checkpoint (optional or auto-resume)
+    # -- 8b. Resume from checkpoint (optional or auto-resume)
     resume_from = getattr(args, 'resume_from', None)
 
     # Auto-resume: if no explicit checkpoint given, check for p3_last.pt
@@ -984,7 +984,7 @@ def main(args):
         print(f"   Resumed at step {resume_step:,}  "
               f"(will train to {args.total_steps:,})")
 
-    # ── 9. Val gallery
+    # -- 9. Val gallery
     print("\nBuilding validation gallery...")
     gallery_imgs, gallery_txts = build_val_gallery(
         val_files, args.image_dir, vocab,
@@ -996,7 +996,7 @@ def main(args):
         raise RuntimeError("Could not build val gallery — check val_files / image_dir")
     print(f"   Gallery: {len(gallery_imgs)} pairs")
 
-    # ── 10. Training loop
+    # -- 10. Training loop
     best_r1        = -1.0
     patience_ctr   = 0
     global_step    = resume_step
@@ -1040,7 +1040,7 @@ def main(args):
         if batch is None:
             continue
 
-        # ── Unfreeze last 4 ViT blocks at step 5k
+        # -- Unfreeze last 4 ViT blocks at step 5k
         if not vit_unfrozen and global_step >= args.unfreeze_step:
             print(f"\n[step {global_step}] Unfreezing last "
                   f"{args.unfreeze_n_blocks} ViT blocks...")
@@ -1054,7 +1054,7 @@ def main(args):
             })
             vit_unfrozen = True
 
-        # ── Hard-negative injection (curriculum)
+        # -- Hard-negative injection (curriculum)
         hn_frac = hard_neg_frac(
             global_step, args.warmup_steps,
             args.hard_neg_ramp_end, args.hard_neg_max_frac,
@@ -1082,7 +1082,7 @@ def main(args):
                 batch['phrases'].extend(inj_phrases)
                 batch['concept_keys'].extend(inj_keys)
 
-        # ── Forward + loss
+        # -- Forward + loss
         images = batch['images'].to(device)
         txt_t  = torch.stack(
             [tokenize_text(p, vocab) for p in batch['phrases']]
@@ -1105,7 +1105,7 @@ def main(args):
         if accum_steps < args.grad_accum:
             continue
 
-        # ── Gradient step
+        # -- Gradient step
         scaler.unscale_(optimizer)
         torch.nn.utils.clip_grad_norm_(
             [p for g in optimizer.param_groups for p in g['params']], 1.0
@@ -1116,7 +1116,7 @@ def main(args):
         accum_steps  = 0
         global_step += 1
 
-        # ── Update LR
+        # -- Update LR
         base_lr = lr_at_step(global_step, args.warmup_steps,
                              args.total_steps, args.lr)
         scale   = unfreeze_lr_scale(global_step, args.unfreeze_step,
@@ -1127,7 +1127,7 @@ def main(args):
             else:
                 pg['lr'] = base_lr
 
-        # ── Periodic checkpoint (every save_every steps, for crash recovery)
+        # -- Periodic checkpoint (every save_every steps, for crash recovery)
         if global_step % args.save_every == 0 and global_step > 0:
             periodic_ckpt = {
                 'step':              global_step,
@@ -1143,7 +1143,7 @@ def main(args):
             if args.save_every != args.eval_every:
                 print(f"   💾 Checkpoint saved (step {global_step:,})")
 
-        # ── Eval
+        # -- Eval
         if global_step % args.eval_every == 0 or global_step == args.total_steps:
             avg_loss = window_loss / max(1, window_count)
             window_loss = window_count = 0
@@ -1203,7 +1203,7 @@ def main(args):
 
     pbar.close()
 
-    # ── Final summary
+    # -- Final summary
     print(f"\n{'='*80}")
     print(f"SHARP LARGE BATCH EXPERIMENT COMPLETE")
     print(f"Batch size: {args.batch_size} (effective: {args.batch_size * args.grad_accum})")
@@ -1221,9 +1221,9 @@ def main(args):
                   f"{row['t2i_r1']*100:>7.2f}%  {row['t2i_r5']*100:>7.2f}%{mark}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Args
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="SHARP Phase 3 - Large Batch Experiment")
