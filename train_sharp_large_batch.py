@@ -66,7 +66,7 @@ class SafeToTensor:
 
 
 # -----------------------------------------------------------------------------
-# Model  (same architecture as Phase 1/2 — checkpoints are compatible)
+# Model  (same architecture as Phase 1/2 - checkpoints are compatible)
 # -----------------------------------------------------------------------------
 
 class ImageEncoderViT(nn.Module):
@@ -150,7 +150,7 @@ class GraphTextCLIP(nn.Module):
 
 
 # -----------------------------------------------------------------------------
-# Multi-positive InfoNCE loss  (Khosla et al., NeurIPS 2020 — cross-modal)
+# Multi-positive InfoNCE loss  (Khosla et al., NeurIPS 2020 - cross-modal)
 # -----------------------------------------------------------------------------
 
 def multi_positive_infonce(img_embs, txt_embs, concept_keys, temperature, bidirectional=False):
@@ -177,7 +177,7 @@ def multi_positive_infonce(img_embs, txt_embs, concept_keys, temperature, bidire
     N = len(img_embs)
     sim = (img_embs @ txt_embs.T) / temperature  # (N, N)
 
-    # Build positive mask — vectorised (can handle N up to ~1024)
+    # Build positive mask - vectorised (can handle N up to ~1024)
     keys = list(concept_keys)
     pos_mask = torch.tensor(
         [[keys[i] == keys[j] for j in range(N)] for i in range(N)],
@@ -929,7 +929,7 @@ def main(args):
           f"{len(loader):,} batches/epoch  |  "
           f"Val: {len(val_files):,} files  |  Test: {len(test_files):,} files")
 
-    # -- 7. Model — start from ImageNet weights
+    # -- 7. Model - start from ImageNet weights
     print("\nCreating model (ImageNet ViT-B/16)...")
     model = GraphTextCLIP(embed_dim=256, temperature=0.07).to(device)
     model.image_encoder.freeze_all()
@@ -993,7 +993,7 @@ def main(args):
         cache_dir=output_dir,
     )
     if gallery_imgs is None:
-        raise RuntimeError("Could not build val gallery — check val_files / image_dir")
+        raise RuntimeError("Could not build val gallery - check val_files / image_dir")
     print(f"   Gallery: {len(gallery_imgs)} pairs")
 
     # -- 10. Training loop
@@ -1247,11 +1247,11 @@ if __name__ == "__main__":
     p.add_argument("--save_every",     type=int,   default=1_000,
                    help="Save checkpoint every N steps (for crash recovery)")
     p.add_argument("--patience",       type=int,   default=10,
-                   help="Early stop after patience×eval_every steps without R@1 gain")
+                   help="Early stop after patiencexeval_every steps without R@1 gain")
     p.add_argument("--batch_size",     type=int,   default=512,
                    help="LARGE BATCH EXPERIMENT: default 512 (vs original 32)")
     p.add_argument("--grad_accum",     type=int,   default=1,
-                   help="Effective batch = batch_size × grad_accum")
+                   help="Effective batch = batch_size x grad_accum")
     p.add_argument("--lr",             type=float, default=1e-4)
     p.add_argument("--image_size",     type=int,   default=224)
     p.add_argument("--num_workers",    type=int,   default=4)
