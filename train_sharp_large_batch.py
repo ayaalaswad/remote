@@ -958,7 +958,7 @@ def main(args):
         auto_ckpt = output_dir / 'p3_last.pt'
         if auto_ckpt.exists():
             resume_from = auto_ckpt
-            print(f"\n⚡ Auto-resuming from: {auto_ckpt}")
+            print(f"\n[AUTO-RESUME] Auto-resuming from: {auto_ckpt}")
 
     if resume_from:
         if not resume_from == output_dir / 'p3_last.pt':
@@ -1141,7 +1141,7 @@ def main(args):
             }
             torch.save(periodic_ckpt, output_dir / 'p3_last.pt')
             if args.save_every != args.eval_every:
-                print(f"   💾 Checkpoint saved (step {global_step:,})")
+                print(f"   [SAVE] Checkpoint saved (step {global_step:,})")
 
         # -- Eval
         if global_step % args.eval_every == 0 or global_step == args.total_steps:
