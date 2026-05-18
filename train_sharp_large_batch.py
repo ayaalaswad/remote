@@ -265,10 +265,12 @@ def partition_scene_files(scene_files, study_to_split, study_to_subject):
     skipped  = 0
 
     for sf in scene_files:
-        stem = Path(sf).stem.split('.')[0]  # e.g. "s50301465"
+        # Handle both s12345.json and s12345.scene_graph.json
+        filename = Path(sf).name  # e.g. "s50301465.scene_graph.json"
+        stem = filename.split('.')[0]  # e.g. "s50301465"
         try:
             sid = int(stem[1:])
-        except ValueError:
+        except (ValueError, IndexError):
             skipped += 1
             continue
 
