@@ -811,8 +811,10 @@ def main(args):
         with open(args.scene_list_path) as f:
             scene_files = [l.strip() for l in f if l.strip()]
     else:
-        scene_files = [str(p) for p in
-                       Path(args.scene_dir).rglob("*.scene_graph.json")]
+        # Look for both *.scene_graph.json and *.json (MIMIC-Ext uses *.json)
+        scene_files = [str(p) for p in Path(args.scene_dir).rglob("*.json")]
+        # Filter out non-scene-graph files if needed
+        scene_files = [f for f in scene_files if '/p' in f.replace('\\', '/')]
     print(f"   Total: {len(scene_files):,} scene files")
 
     # ── 3. Partition + subject-id guard
