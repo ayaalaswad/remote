@@ -948,10 +948,20 @@ def main(args):
     vit_unfrozen = False
     resume_step  = 0
 
-    # ── 8b. Resume from checkpoint (optional)
-    if getattr(args, 'resume_from', None):
-        print(f"\nResuming from: {args.resume_from}")
-        ckpt_r = torch.load(args.resume_from, map_location=device)
+    # ── 8b. Resume from checkpoint (optional or auto-resume)
+    resume_from = getattr(args, 'resume_from', None)
+
+    # Auto-resume: if no explicit checkpoint given, check for p3_last.pt
+    if resume_from is None:
+        auto_ckpt = output_dir / 'p3_last.pt'
+        if auto_ckpt.exists():
+            resume_from = auto_ckpt
+            print(f"\n⚡ Auto-resuming from: {auto_ckpt}")
+
+    if resume_from:
+        if not resume_from == output_dir / 'p3_last.pt':
+            print(f"\nResuming from: {resume_from}")
+        ckpt_r = torch.load(resume_from, map_location=device)
         resume_step = ckpt_r['step']
         if resume_step >= args.unfreeze_step:
             model.image_encoder.unfreeze_last_n_blocks(args.unfreeze_n_blocks)
@@ -962,6 +972,12 @@ def main(args):
             vit_unfrozen = True
         model.load_state_dict(ckpt_r['model_state_dict'])
         optimizer.load_state_dict(ckpt_r['optimizer_state_dict'])
+
+        # Load scaler state if available (for mixed precision training)
+        if 'scaler_state_dict' in ckpt_r:
+            scaler.load_state_dict(ckpt_r['scaler_state_dict'])
+            print(f"   ✅ Restored GradScaler state")
+
         del ckpt_r
         print(f"   Resumed at step {resume_step:,}  "
               f"(will train to {args.total_steps:,})")
@@ -1109,6 +1125,22 @@ def main(args):
             else:
                 pg['lr'] = base_lr
 
+        # ── Periodic checkpoint (every save_every steps, for crash recovery)
+        if global_step % args.save_every == 0 and global_step > 0:
+            periodic_ckpt = {
+                'step':              global_step,
+                'model_state_dict':  model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'scaler_state_dict': scaler.state_dict(),
+                'vocab_path':        str(vocab_path),
+                'batch_size':        args.batch_size,
+                'effective_batch':   args.batch_size * args.grad_accum,
+                'args':              vars(args),
+            }
+            torch.save(periodic_ckpt, output_dir / 'p3_last.pt')
+            if args.save_every != args.eval_every:
+                print(f"   💾 Checkpoint saved (step {global_step:,})")
+
         # ── Eval
         if global_step % args.eval_every == 0 or global_step == args.total_steps:
             avg_loss = window_loss / max(1, window_count)
@@ -1128,6 +1160,7 @@ def main(args):
                 'step':              global_step,
                 'model_state_dict':  model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
+                'scaler_state_dict': scaler.state_dict(),  # For mixed precision resume
                 'avg_loss':          avg_loss,
                 'i2t_r1': i2t_r1, 'i2t_r5': i2t_r5,  'i2t_r10': i2t_r10,
                 't2i_r1': t2i_r1, 't2i_r5': t2i_r5,  't2i_r10': t2i_r10,
@@ -1209,6 +1242,8 @@ if __name__ == "__main__":
     p.add_argument("--total_steps",    type=int,   default=100_000)
     p.add_argument("--warmup_steps",   type=int,   default=5_000)
     p.add_argument("--eval_every",     type=int,   default=2_000)
+    p.add_argument("--save_every",     type=int,   default=1_000,
+                   help="Save checkpoint every N steps (for crash recovery)")
     p.add_argument("--patience",       type=int,   default=10,
                    help="Early stop after patience×eval_every steps without R@1 gain")
     p.add_argument("--batch_size",     type=int,   default=512,
