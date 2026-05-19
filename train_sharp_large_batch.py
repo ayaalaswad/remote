@@ -581,23 +581,19 @@ class PairedBatchSampler:
     Guarantees 100% co-positive rate.
     """
     def __init__(self, crop_manifest, batch_size, shuffle=True, seed=42):
+        if crop_manifest is None:
+            raise ValueError("PairedBatchSampler requires crop_manifest (pre-cached crops)")
+
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.rng = random.Random(seed)
 
-        # Group indices by concept key
+        # Group indices by concept key (use concept_key from manifest, don't parse path!)
         self.key_to_indices = defaultdict(list)
-        for idx, crop_path in enumerate(crop_manifest):
-            # Extract concept key from crop_path
-            # Format: /path/.../s12345/region_entity_pol.jpg
-            parts = crop_path.split('_')
-            if len(parts) >= 3:
-                # Last 3 parts before .jpg are region, entity, polarity
-                pol = parts[-1].replace('.jpg', '')
-                entity = parts[-2]
-                region = '_'.join(parts[-3].split('/')[-1:])
-                key = (region, entity, pol)
-                self.key_to_indices[key].append(idx)
+        for idx, entry in enumerate(crop_manifest):
+            # entry is a dict with 'crop', 'concept_key', etc.
+            key = entry['concept_key']
+            self.key_to_indices[key].append(idx)
 
         # Keep only keys with at least 2 instances
         self.valid_keys = [k for k, v in self.key_to_indices.items() if len(v) >= 2]
@@ -945,6 +941,11 @@ def main(args):
     g = torch.Generator(); g.manual_seed(42)
 
     if args.paired_sampling:
+        if crop_manifest is None:
+            print("\n[ERROR] Paired sampling requires pre-cached crops!")
+            print("  Please run crop caching first or disable --paired_sampling")
+            raise RuntimeError("crop_manifest is None - cannot use paired_sampling without crop cache")
+
         print(f"\n[*] Using PAIRED SAMPLING - guaranteed co-positives!")
         print(f"   Each batch will have {args.batch_size // 2} concept keys, 2 instances each")
 
