@@ -942,9 +942,30 @@ def main(args):
 
     if args.paired_sampling:
         if crop_manifest is None:
-            print("\n[ERROR] Paired sampling requires pre-cached crops!")
-            print("  Please run crop caching first or disable --paired_sampling")
-            raise RuntimeError("crop_manifest is None - cannot use paired_sampling without crop cache")
+            print("\n[*] Building lightweight manifest for paired sampling...")
+            # Build manifest on-the-fly by extracting concept keys from scene files
+            crop_manifest = []
+            rng_manifest = random.Random(42)
+            sample_files = rng_manifest.sample(train_files, min(20000, len(train_files)))
+
+            for sf in tqdm(sample_files, desc="Building manifest", leave=False):
+                try:
+                    with open(sf) as fh:
+                        scene = json.load(fh)
+                except Exception:
+                    continue
+
+                pairs = extract_pairs(scene, args.image_dir, rng=rng_manifest,
+                                    no_polarity=args.no_polarity)
+                for pair in pairs:
+                    crop_manifest.append({
+                        'crop': pair['image_path'],
+                        'concept_key': pair['concept_key'],
+                        'phrase': pair['phrase'],
+                        'bbox': pair['bbox'],
+                    })
+
+            print(f"   Built manifest: {len(crop_manifest):,} pairs from {len(sample_files):,} files")
 
         print(f"\n[*] Using PAIRED SAMPLING - guaranteed co-positives!")
         print(f"   Each batch will have {args.batch_size // 2} concept keys, 2 instances each")
