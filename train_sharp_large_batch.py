@@ -573,45 +573,76 @@ def collate_fn(batch):
     }
 
 
+class PairedBatchSampler:
+    """
+    Custom batch sampler that guarantees paired samples with same concept keys.
+
+    For batch_size=32, samples 16 concept keys and 2 instances each.
+    Guarantees 100% co-positive rate.
+    """
+    def __init__(self, crop_manifest, batch_size, shuffle=True, seed=42):
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.rng = random.Random(seed)
+
+        # Group indices by concept key
+        self.key_to_indices = defaultdict(list)
+        for idx, crop_path in enumerate(crop_manifest):
+            # Extract concept key from crop_path
+            # Format: /path/.../s12345/region_entity_pol.jpg
+            parts = crop_path.split('_')
+            if len(parts) >= 3:
+                # Last 3 parts before .jpg are region, entity, polarity
+                pol = parts[-1].replace('.jpg', '')
+                entity = parts[-2]
+                region = '_'.join(parts[-3].split('/')[-1:])
+                key = (region, entity, pol)
+                self.key_to_indices[key].append(idx)
+
+        # Keep only keys with at least 2 instances
+        self.valid_keys = [k for k, v in self.key_to_indices.items() if len(v) >= 2]
+        self.num_pairs_per_batch = batch_size // 2
+
+        print(f"   Paired sampler: {len(self.valid_keys)} keys with 2+ instances")
+
+    def __iter__(self):
+        # Shuffle keys if needed
+        keys = self.valid_keys.copy()
+        if self.shuffle:
+            self.rng.shuffle(keys)
+
+        # Generate batches
+        for i in range(0, len(keys), self.num_pairs_per_batch):
+            batch_keys = keys[i:i + self.num_pairs_per_batch]
+            if len(batch_keys) < self.num_pairs_per_batch:
+                # Last incomplete batch, wrap around
+                batch_keys += keys[:self.num_pairs_per_batch - len(batch_keys)]
+
+            # For each key, sample 2 instances
+            batch_indices = []
+            for key in batch_keys:
+                indices = self.key_to_indices[key]
+                if len(indices) >= 2:
+                    pair = self.rng.sample(indices, 2)
+                    batch_indices.extend(pair)
+
+            if len(batch_indices) == self.batch_size:
+                yield batch_indices
+
+    def __len__(self):
+        return len(self.valid_keys) // self.num_pairs_per_batch
+
+
 def paired_collate_fn(batch):
-    """
-    Collate function with guaranteed same-concept pairs.
-
-    Ensures every batch has at least 1 co-positive pair per concept key.
-    Batch size N -> N/2 concept keys, 2 instances each.
-    """
+    """Simple collate for paired batches (sampler handles pairing)."""
     batch = [b for b in batch if b is not None]
-    if len(batch) < 4:
-        # Fallback to regular if batch too small
-        return collate_fn(batch)
-
-    # Group by concept key
-    key_to_samples = defaultdict(list)
-    for sample in batch:
-        key_to_samples[sample['concept_key']].append(sample)
-
-    # Sample pairs: batch_size/2 keys, 2 samples each
-    target_size = len(batch)
-    num_keys = target_size // 2
-
-    # Select keys that have at least 2 samples
-    valid_keys = [k for k, v in key_to_samples.items() if len(v) >= 2]
-    if len(valid_keys) < num_keys:
-        # Not enough keys with pairs, fall back to regular
-        return collate_fn(batch)
-
-    # Sample keys and create paired batch
-    selected_keys = random.sample(valid_keys, num_keys)
-    paired_batch = []
-    for key in selected_keys:
-        # Sample 2 instances of this concept key
-        pair = random.sample(key_to_samples[key], 2)
-        paired_batch.extend(pair)
+    if len(batch) == 0:
+        return None
 
     return {
-        'images':       torch.stack([b['image'] for b in paired_batch]),
-        'phrases':      [b['phrase'] for b in paired_batch],
-        'concept_keys': [b['concept_key'] for b in paired_batch],
+        'images':       torch.stack([b['image'] for b in batch]),
+        'phrases':      [b['phrase'] for b in batch],
+        'concept_keys': [b['concept_key'] for b in batch],
     }
 
 
@@ -910,21 +941,41 @@ def main(args):
     if crop_manifest is None:
         train_ds._virtual_len = len(train_files) * 5
 
-    # Choose collate function based on paired_sampling flag
-    collate_function = paired_collate_fn if args.paired_sampling else collate_fn
+    # Create DataLoader with or without paired sampling
+    g = torch.Generator(); g.manual_seed(42)
+
     if args.paired_sampling:
         print(f"\n[*] Using PAIRED SAMPLING - guaranteed co-positives!")
         print(f"   Each batch will have {args.batch_size // 2} concept keys, 2 instances each")
 
-    g = torch.Generator(); g.manual_seed(42)
-    loader = DataLoader(
-        train_ds, batch_size=args.batch_size, shuffle=True,
-        num_workers=args.num_workers, collate_fn=collate_function,
-        persistent_workers=(args.num_workers > 0),
-        prefetch_factor=2 if args.num_workers > 0 else None,
-        pin_memory=True, drop_last=True,
-        worker_init_fn=seed_worker, generator=g,
-    )
+        # Create paired batch sampler
+        batch_sampler = PairedBatchSampler(
+            crop_manifest=crop_manifest,
+            batch_size=args.batch_size,
+            shuffle=True,
+            seed=42
+        )
+
+        loader = DataLoader(
+            train_ds,
+            batch_sampler=batch_sampler,
+            num_workers=args.num_workers,
+            collate_fn=paired_collate_fn,
+            persistent_workers=(args.num_workers > 0),
+            prefetch_factor=2 if args.num_workers > 0 else None,
+            pin_memory=True,
+            worker_init_fn=seed_worker,
+        )
+    else:
+        # Standard random sampling
+        loader = DataLoader(
+            train_ds, batch_size=args.batch_size, shuffle=True,
+            num_workers=args.num_workers, collate_fn=collate_fn,
+            persistent_workers=(args.num_workers > 0),
+            prefetch_factor=2 if args.num_workers > 0 else None,
+            pin_memory=True, drop_last=True,
+            worker_init_fn=seed_worker, generator=g,
+        )
     print(f"\nTrain: {len(train_files):,} files  |  "
           f"{len(loader):,} batches/epoch  |  "
           f"Val: {len(val_files):,} files  |  Test: {len(test_files):,} files")
