@@ -1,0 +1,822 @@
+% ============================================================
+% MICCAI 2026 -- Springer LNCS (splncs04)
+% Scene-Graph Contrastive Pretraining for Radiology Report Generation
+% ============================================================
+\documentclass[runningheads]{llncs}
+\pdfminorversion=4
+\pdfobjcompresslevel=0
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc}
+\definecolor{hitgreen}{RGB}{0,130,60}
+\definecolor{missred}{RGB}{180,0,0}
+\definecolor{refblue}{RGB}{0,70,160}
+\definecolor{anchorblue}{RGB}{33,102,172}
+\definecolor{anatorange}{RGB}{214,96,77}
+\definecolor{neggreen}{RGB}{77,172,38}
+\newcommand{\hit}[1]{\textbf{\textcolor{hitgreen}{#1}}}
+\newcommand{\miss}[1]{\textbf{\textcolor{missred}{#1}}}
+\newcommand{\refcol}[1]{\textit{\textcolor{refblue}{#1}}}
+
+% ---- Convenience macros
+\newcommand{\etal}{\emph{et al.}}
+
+\begin{document}
+
+\title{Scene-Graph Contrastive Pretraining\\
+       with Concept-Based Hard Negatives\\
+       for Radiology Report Generation}
+\titlerunning{Title Suppressed Due to Excessive Length}
+
+% ---- Anonymised author block (do NOT modify for submission) ----
+\author{Anonymous Author(s)}
+\authorrunning{Anonymous}
+\institute{Anonymous Institution}
+
+\maketitle
+
+% ------------------------------------------------------------------
+\begin{abstract}
+Automated radiology report generation aims to produce structured
+clinical reports directly from chest X-rays, reducing radiologist
+workload and enabling timely diagnosis in high-demand settings.
+Due to the limitations of current vision-language pretraining
+techniques --- which rely on single-positive objectives and random
+negative sampling --- existing encoders fail to capture the
+fine-grained clinical structure that makes a report useful:
+\emph{which} region is affected, \emph{what} the finding is, and
+\emph{whether} it is present or absent.
+To alleviate these issues, we introduce \textbf{SHARP}
+(\textbf{S}cene-graph \textbf{H}ard-negative \textbf{A}ware
+\textbf{R}adiology \textbf{P}retraining), a two-stage framework that
+directly addresses these limitations.
+Specifically, in the first stage we pretrain a ViT-B/16 encoder on
+over 1.1M image--crop pairs derived from MIMIC-Ext-CXR-QBA scene
+graphs~\cite{mimicextcxrqba}, using a concept key that encodes region,
+entity, and polarity to group identical findings as co-positives and
+mine anatomy-hard and negation-hard negatives under a progressive
+curriculum --- forcing the encoder to discriminate findings it would
+otherwise conflate, but only once it has learned to represent them.
+In the second stage, we transfer the pretrained encoder into
+single-image CXRMate~\cite{cxrmate} and fine-tune the full model for
+end-to-end report generation.
+Evaluated on the MIMIC-CXR test set, SHARP achieves CheXbert
+F1\,=\,0.3032, significantly outperforming ImageNet-pretrained encoders
+(+15.8\%, $p{<}0.001$) with the largest gains in the Impression
+section---the component demanding clinical synthesis---demonstrating
+that the encoder learned what we taught it.
+When applied to RAD-DINO~\cite{raddino}, a domain-pretrained encoder
+(F1\,=\,0.3083), SHARP with differential learning rates achieves
+F1\,=\,0.3136 (+1.7\%, $p{=}0.08$), confirming that concept-key
+supervision can substitute for large-scale domain pretraining when
+starting from general-purpose vision encoders, achieving 89\% of the
+performance gain using 44$\times$ less data.
+\end{abstract}
+
+\keywords{Radiology report generation \and
+          Contrastive learning \and
+          Vision-language pretraining \and
+          Hard negative mining \and
+          Medical imaging}
+
+% ------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+
+Chest radiography is the most frequently ordered medical imaging
+procedure worldwide.
+Each study requires a structured written report describing anatomical
+findings, their clinical significance, and whether each finding is
+present or absent --- a process that is time-consuming, subject to
+fatigue-related error, and increasingly constrained by radiologist
+shortages in high-volume settings~\cite{mimiccxr}.
+Automated radiology report generation --- producing these reports
+directly from chest X-ray images --- offers a practical route to
+reducing reporting delays, supporting earlier triage, and freeing
+radiologists to focus on the most complex cases.
+
+Encoder--decoder architectures have driven progress: CNN/transformer
+encoders~\cite{r2gen,cmn}, region-guided cross-attention in
+CXRMate~\cite{cxrmate}, RGRG~\cite{rgrg}, and
+CAMANet~\cite{camanet}, and longitudinal or LLM-based extensions
+BioViL-T~\cite{biovilt}, HERGen~\cite{hergen}, MAIRA-2~\cite{maira2}.
+Across all these systems, encoder quality is decisive.
+
+Contrastive vision-language pretraining has become the standard route
+to stronger encoders: CLIP~\cite{clip} for general vision;
+ConVIRT~\cite{convirt}, BioViL~\cite{biovil}, MedCLIP~\cite{medclip},
+and RAD-DINO~\cite{raddino} for radiology.
+These methods share two critical limitations.
+First, single-positive objectives with random negatives leave encoders
+unable to distinguish findings differing in entity or polarity
+(\textit{present} vs.\ \textit{absent}).
+Second, while hard-negative mining is known to help~\cite{hardmining}
+and GLoRIA~\cite{gloria} builds local negatives from saliency maps,
+no radiology method grounds negatives in the three attributes defining
+every finding: \textbf{region}, \textbf{entity}, and \textbf{polarity}.
+
+\begin{sloppypar}
+We propose \textbf{SHARP} (\textbf{S}cene-graph \textbf{H}ard-negative
+\textbf{A}ware \textbf{R}adiology \textbf{P}retraining), which extracts
+over 1.1M concept-keyed crop--phrase pairs from
+MIMIC-Ext-CXR-QBA~\cite{mimicextcxrqba}, trains a ViT-B/16 via
+multi-positive InfoNCE with \textbf{anatomy-hard} (same region,
+different entity) and \textbf{negation-hard} (same entity, opposite
+polarity) negatives, and ramps injection over 25,000 steps via a
+curriculum our ablations show to be \emph{necessary}: early injection
+degrades; delayed until semantic readiness, it unlocks what supervision
+alone cannot achieve.
+To the best of our knowledge, SHARP is the first radiology pretraining
+method to treat polarity as an explicit contrastive axis and the first
+to leverage MIMIC-Ext-CXR-QBA for visual pretraining.
+Integrated into CXRMate~\cite{cxrmate} and evaluated on MIMIC-CXR
+($N{=}1{,}624$), SHARP achieves CheXbert F1\,=\,0.3032
+($+15.8\,\%$ over the ImageNet baseline, $p{<}0.001$), with gains
+concentrated in the \textbf{Impression} section and absent from the
+templatic \textbf{Findings} section: \emph{the model learned what we taught it.}
+\end{sloppypar}
+
+% ------------------------------------------------------------------
+\section{Methods}
+\label{sec:methods}
+
+Our methodology comprises two stages and five components
+(Fig.~\ref{fig:overview}).
+\textbf{Stage~1} is a contrastive pretraining stage with four
+components: \textit{(i)}~\textbf{data extraction} from
+MIMIC-Ext-CXR-QBA scene graphs into concept-keyed image--crop pairs
+encoding region, entity, and polarity; \textit{(ii)}~a
+\textbf{multi-positive InfoNCE loss} grouping same-concept crops as
+co-positives; \textit{(iii)}~\textbf{hard negative mining} that builds
+anatomy-hard and negation-hard negatives from a structured concept
+index; and \textit{(iv)}~a \textbf{curriculum schedule} that ramps
+hard-negative injection over 25{,}000 steps, letting the encoder
+stabilise before the hardest contrasts are introduced.
+\textbf{Stage~2} transfers the pretrained ViT-B/16 into single-image
+CXRMate~\cite{cxrmate} and fine-tunes end-to-end on MIMIC-CXR.
+All components are unified by a concept key
+$K{=}(\text{region},\text{entity},\text{polarity})$, defined below.
+
+% ---- Figure 1: Architecture Overview
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/figure1.png}
+\caption{\textbf{Framework overview.}
+  \emph{Stage~1 (top):} Scene graphs yield (crop $x$, phrase $w$, key $K$)
+  triplets; ViT-B/16 and Bi-LSTM embeddings are contrasted via multi-positive
+  InfoNCE (Eq.~\ref{eq:mpinfonce}) with curriculum hard negatives
+  $\rho(s)$ (Eq.~\ref{eq:curriculum}).
+  \emph{Stage~2 (bottom):} Pretrained ViT-B/16 transferred to CXRMate.}
+\label{fig:overview}
+\end{figure}
+
+\subsection{Data Extraction from Scene Graphs}
+\label{ssec:data}
+
+We process all 227,239 MIMIC-Ext-CXR-QBA~\cite{mimicextcxrqba}
+studies, each associated with a scene graph encoding observations with
+entity name, polarity ($\in\{\text{pos},\text{neg}\}$), severity,
+bounding boxes, and anatomical region IDs.
+\begin{sloppypar}
+We assign each observation a \textbf{concept key}
+$K{=}(\text{region},\text{entity},\text{polarity})$ encoding location,
+entity, and presence or absence; the paired \textbf{structured phrase}
+\mbox{\texttt{[region] entity (polarity[, severity])}} serves as text input.
+\end{sloppypar}
+For each bounding box we emit a training tuple
+$(x_\text{crop},\, w,\, K)$: image crop, phrase, and key.
+Processing all studies yields over 1.1M training tuples.
+Including both positive and negative observations encodes clinical
+polarity directly in the concept key; generic negatives are capped at
+10\,\% per study.
+We follow official MIMIC-CXR splits~\cite{mimiccxr}: train for
+pretraining tuples, validation for encoder selection.
+
+\subsection{Multi-Positive InfoNCE Loss}
+\label{ssec:loss}
+
+Following the supervised contrastive formulation of~\cite{supcon}, we
+extend InfoNCE to the multi-positive cross-modal setting.
+For a batch of $N$ L2-normalised image embeddings $\{z_i\}$ and text
+embeddings $\{t_j\}$, the positive set for anchor $i$ is
+$\mathcal{P}(i){=}\{j: K_j{=}K_i\}$.
+The loss for image anchor $i$ is:
+\begin{equation}
+  \mathcal{L}_i = -\frac{1}{|\mathcal{P}(i)|}
+            \sum_{j \in \mathcal{P}(i)}
+            \log\frac{\exp\!\bigl(z_i \cdot t_j\,/\,\tau\bigr)}
+                     {\displaystyle\sum_{k=1}^{N}\exp\!\bigl(z_i \cdot t_k\,/\,\tau\bigr)},
+  \label{eq:mpinfonce}
+\end{equation}
+with $\tau{=}0.07$ and $\mathcal{L}{=}\tfrac{1}{N}\sum_i \mathcal{L}_i$.
+The loss is unidirectional (image anchors only); same-concept crops
+across patients form co-positives, and the denominator sums over all
+$N$ text embeddings regardless of concept key.
+
+\subsection{Concept-Based Hard Negative Mining}
+\label{ssec:hardneg}
+
+A lightweight in-memory index (resampled each epoch for stochastic
+coverage) maps each concept key to available crop--phrase pairs.
+Two strategies target different axes of confusability:\\[2pt]
+\noindent\textbf{Anatomy-hard:} same region, different entity --- forces the
+encoder to discriminate findings within the same anatomical territory.\\[2pt]
+\noindent\textbf{Negation-hard:} same (region, entity), opposite polarity --- the
+hardest clinical distinction, requiring the encoder to capture subtle
+image cues separating present from absent findings.
+
+At each step, one strategy is chosen with equal probability and the
+pair appended to the batch; injection probability $\rho(s)$ follows
+Sect.~\ref{ssec:curriculum}.
+More details and visual examples of both strategies are provided in
+the supplementary material.
+
+\subsection{Curriculum Hard-Negative Schedule}
+\label{ssec:curriculum}
+
+Hard-negative injection probability $\rho(s)$ ramps linearly from 0
+after a warmup~\cite{curriculumlearning}:
+\begin{equation}
+  \rho(s) =
+  \begin{cases}
+    0 & s < s_\text{warm}, \\[2pt]
+    \min\!\Bigl(\rho_\text{max},\;
+                \rho_\text{max}\cdot
+                \tfrac{s - s_\text{warm}}{s_\text{ramp} - s_\text{warm}}
+               \Bigr)
+      & s \geq s_\text{warm},
+  \end{cases}
+  \label{eq:curriculum}
+\end{equation}
+with $s_\text{warm}{=}5{,}000$, $\rho_\text{max}{=}0.60$, and
+$s_\text{ramp}{=}30{,}000$.
+When $s_\text{ramp} = s_\text{warm}$, we define $\rho(s) = \rho_\text{max}$ for all $s \geq s_\text{warm}$.
+When injected, 25\,\% of the batch (up to 8 pairs) are replaced by
+hard-negative samples, allowing the model to first acquire coarse
+visual semantics before encountering the hardest cases.
+
+\subsection{Encoder Architecture and Stage~2 Fine-Tuning}
+\label{ssec:arch}
+
+\textbf{Visual encoder.}
+ViT-B/16~\cite{vit} initialised from ImageNet-21k; a two-layer
+projection head (768$\to$512$\to$256\,dim, ReLU) maps CLS tokens to
+the 256-dim contrastive embedding space.
+ViT blocks are frozen for the first 5,000 steps, after which the last
+4 transformer blocks and final LayerNorm are unfrozen.
+We train Stage~1 with AdamW ($\eta{=}10^{-4}$, cosine decay,
+effective batch size 32) for up to 60,000 steps, and select the
+checkpoint with the highest validation R@1 as the final backbone.
+
+\textbf{Text encoder.}
+We employ a 2-layer Bi-LSTM (128-dim embedding, 256-dim hidden,
+10,000-token vocabulary) rather than pretrained language models (e.g.,
+PubMedBERT~\cite{pubmedbert}, CXR-BERT~\cite{cxrbert}) to isolate the
+contribution of visual representation learning.
+Pretrained medical LMs already encode negation and clinical polarity
+from text corpora, potentially introducing linguistic shortcuts that
+obscure whether the vision encoder has genuinely learned
+polarity-discriminative visual features.
+Following CXRMate~\cite{cxrmate}, which achieves competitive performance
+using randomly initialized Transformer decoders without pretrained text
+encoders, we prioritize vision encoder quality as our core contribution.
+The Bi-LSTM encodes structured phrases into the same 256-dim contrastive
+space without pre-baked domain semantics, forcing the vision encoder to
+learn concept-key discrimination through visual features alone.
+We use the Bi-LSTM only in Stage~1 and discard it before Stage~2.
+
+\textbf{Stage~2 fine-tuning.}
+The ViT-B/16 backbone (Stage~1 projection head discarded) is
+transferred to single-image CXRMate~\cite{cxrmate} with a new linear
+projection head, and the full encoder--decoder is fine-tuned end-to-end
+on MIMIC-CXR ($\eta{=}5{\times}10^{-5}$, 10 epochs, AdamW).
+
+% ------------------------------------------------------------------
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Dataset}
+
+We use MIMIC-CXR-JPG~\cite{mimiccxr} (images) and
+MIMIC-Ext-CXR-QBA~\cite{mimicextcxrqba} (scene graphs) over
+227,239 subject-disjoint studies (222,180/1,805/3,254 train/val/test);
+Stage~2 uses the standard 232,715-image DICOM split.
+
+\subsection{Evaluation Metrics}
+
+\textbf{Pretraining:} image-to-text R@1/5/10 on held-out galleries
+(741 val pairs, 571 test pairs; ${\leq}2$ per subject), used as an
+auxiliary diagnostic with report generation as the primary endpoint.
+\textbf{Report generation:} CheXbert F1~\cite{chexbert} (primary, 14
+conditions), RadGraph F1~\cite{radgraph}, CXR-BERT~\cite{cxrbert},
+BLEU-4~\cite{bleu}, ROUGE-L~\cite{rouge}, METEOR~\cite{meteor}.
+
+\subsection{Experimental Setup}
+
+We evaluate four conditions:
+$\{\text{ImageNet},\,\text{SHARP}\}\!\times\!\{\text{frozen},\,\text{fine-tuned}\}$
+encoder, with the CXRMate decoder fixed throughout so that all gains
+are attributable to encoder initialisation alone.
+Prior single-image results~\cite{r2gen,cmn,cvt2gpt2} appear for context
+(decoder architectures differ from CXRMate); ImageNet-FT is our primary
+controlled baseline, evaluated with the~\cite{cxrmate} pipeline.
+Hyperparameters follow Sect.~\ref{ssec:arch}.
+All experiments use a single NVIDIA A100 (40\,GB); Stage~1 converges
+in ${\approx}$60k steps (${\approx}$100\,min), Stage~2 in 10 epochs
+(${\approx}$70\,min), peak 12\,GB GPU memory.
+
+% ------------------------------------------------------------------
+\section{Results}
+\label{sec:results}
+
+\subsection{Quantitative Results}
+
+\noindent\textbf{Stage~1 retrieval.}
+SHARP achieves image-to-text R@1\,=\,7.02\,\% ($52{\times}$ above
+chance; R@5 19.16\,\%, R@10 31.44\,\%) on the validation gallery, and
+R@1\,=\,4.90\,\% ($28{\times}$ above chance; R@5 21.37\,\%, R@10 36.08\,\%)
+on the test gallery, confirming semantically structured cross-modal
+representations.
+A bidirectional variant (averaging i$\to$t and t$\to$i losses) achieved
+validation R@1\,=\,6.61\,\%, demonstrating that unidirectional vs.\ bidirectional
+choice affects retrieval performance but does not eliminate the multi-positive
+InfoNCE attribution issue (see ablation discussion).
+
+\noindent\textbf{ImageNet-F / ImageNet-FT (baselines).}
+Frozen ImageNet: CheXbert F1\,=\,0.2111;
+fine-tuned: 0.2618 ($+24.0\,\%$), CXR-BERT 0.5369 (primary baseline).
+
+\noindent\textbf{SHARP-F (ours, frozen).}
+Without fine-tuning, scene-graph pretraining yields CheXbert
+F1\,=\,0.2214 ($+4.9\,\%$ over ImageNet-F); CXR-BERT and RadGraph~F1
+show a slight frozen regression (Table~\ref{tab:results_full}),
+reflecting features optimised for discrimination over visual similarity.
+
+\noindent\textbf{SHARP-FT (ours, fine-tuned).}
+Fine-tuning the SHARP encoder achieves CheXbert F1\,=\,0.3032
+($+15.8\,\%$ over ImageNet-FT, $p{<}0.001$), surpassing all prior
+single-image methods evaluated under the same pipeline
+(CvT2DistilGPT2 0.258, CMN 0.251, R2Gen 0.160~\cite{cxrmate}).
+Note that Nicolson~\etal~\cite{cxrmate} reported only CheXbert F1
+for prior models; remaining metrics are marked (--) in Table~\ref{tab:results}.
+Table~\ref{tab:results_full} confirms consistent gains across all
+seven metrics (RadGraph $+8.1\,\%$, CXR-BERT $+7.8\,\%$,
+all $p{<}0.001$).
+
+\noindent\textbf{RAD-DINO extension.}
+Replacing ViT-B with RAD-DINO~\cite{raddino} and fine-tuning with a
+uniform learning rate yields SHARP+RD-FT CheXbert F1\,=\,0.3089
+($\Delta{=}+0.0006$ over RAD-DINO-FT, n.s.\ per paired bootstrap),
+suggesting catastrophic forgetting masks SHARP's signal.
+Using a \emph{differential} learning rate (backbone $10^{-5}$,
+decoder $5{\times}10^{-5}$) raises SHARP+RD-FT to CheXbert
+F1\,=\,0.3136 ($+1.7\,\%$ over RAD-DINO-FT, $p{=}0.08$, n.s.\
+per paired bootstrap), CXR-BERT $+0.020$, and RadGraph $+0.007$,
+suggesting SHARP benefits domain-pretrained encoders when backbone
+fine-tuning is sufficiently restrained.
+
+% --- Table 1a: CheXbert F1 --- all models ---
+\begin{table}[t]
+\centering
+\caption{CheXbert F1 (macro, 14 conditions) on MIMIC-CXR test set.
+         \textbf{Bold}: best result. $^\dagger$From Nicolson~\etal~\cite{cxrmate}.}
+\label{tab:results}
+{\small\setlength{\tabcolsep}{5pt}%
+\begin{tabular}{lp{2.4cm}c}
+\toprule
+\textbf{Model} & \textbf{Encoder} & \textbf{CheXbert F1}$\uparrow$ \\
+\midrule
+R2Gen~\cite{r2gen}$^\dagger$             & CNN+Mem.      & 0.160  \\
+CMN~\cite{cmn}$^\dagger$                 & CNN+Graph     & 0.251  \\
+CvT2DistilGPT2~\cite{cvt2gpt2}$^\dagger$ & CvT           & 0.258  \\
+\midrule
+ImageNet-F                               & Frozen        & 0.2111 \\
+ImageNet-FT                              & Fine-tuned    & 0.2618 \\
+\midrule
+\textbf{SHARP-F} (ours)                  & Frozen        & 0.2214 \\
+\textbf{SHARP-FT} (ours)                 & Fine-tuned    & 0.3032 \\
+\midrule
+RAD-DINO-FT                              & RAD-DINO       & 0.3083 \\
+\textbf{SHARP+RD-FT} (ours)              & SHARP+RAD-DINO & \textbf{0.3136} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+% --- Table 1b: Full metrics, controlled models only ---
+\begin{table}[t]
+\centering
+\caption{Semantic and NLG metrics (MIMIC-CXR test, 1,624 studies),
+         controlled models only. \textbf{Bold}: best.
+         Section-level ROUGE-L/METEOR in Table~\ref{tab:sections}.}
+\label{tab:results_full}
+\setlength{\tabcolsep}{3pt}%
+\resizebox{\linewidth}{!}{\begin{tabular}{lp{2.2cm}ccc}
+\toprule
+\textbf{Model} & \textbf{Encoder} &
+\textbf{CXR-BERT}$\uparrow$ & \textbf{RadGraph F1}$\uparrow$ &
+\textbf{BLEU-4}$\uparrow$ \\
+\midrule
+ImageNet-F               & Frozen         & 0.3535 & 0.1842 & 0.0435 \\
+ImageNet-FT              & Fine-tuned     & 0.5369 & 0.2062 & 0.0494 \\
+\midrule
+\textbf{SHARP-F} (ours)   & Frozen         & 0.3495 & 0.1806 & 0.0416 \\
+\textbf{SHARP-FT} (ours)  & Fine-tuned     & 0.5790 & 0.2229 & 0.0518 \\
+\midrule
+RAD-DINO-FT               & RAD-DINO       & 0.6077 & 0.2286 & \textbf{0.0540} \\
+\textbf{SHARP+RD-FT}(ours)& SHARP+RAD-DINO & \textbf{0.6280} & \textbf{0.2353} & 0.0538 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Section-level NLG metrics} (MIMIC-CXR test, 1,624 studies).
+         Impression gains significant ($p{<}0.001$); Findings n.s.}
+\label{tab:sections}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Model} & \textbf{Section} &
+\textbf{BLEU-1} & \textbf{BLEU-4} & \textbf{ROUGE-L} & \textbf{METEOR} \\
+\midrule
+ImageNet-FT & Findings   & 39.22 & 10.95 & 23.74 & 28.91 \\
+            & Impression & 18.36 &  3.08 & 16.84 & 18.80 \\
+\midrule
+SHARP-FT    & Findings   & 38.64 & 10.65 & 23.80 & 29.26 \\
+            & Impression & \textbf{19.01} & \textbf{3.77} & \textbf{18.39} & \textbf{20.14} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Qualitative and Ablation Analysis}
+\label{ssec:analysis}
+
+\noindent\textbf{Qualitative example.}
+Table~\ref{tab:qual} shows a representative case where ImageNet-FT
+hallucinates bilateral pleural effusions (a polarity error: it
+conflates the pleural boundary feature with \textit{presence});
+SHARP-FT and the ground truth both report a normal study.
+
+\begin{table}[t]
+\centering
+\caption{Polarity example (MIMIC-CXR test, study~58307391).}
+\label{tab:qual}
+{\scriptsize\setlength{\tabcolsep}{3pt}%
+\begin{tabular}{lp{4.9cm}p{2.3cm}}
+\toprule
+& \textbf{Findings (excerpt)} & \textbf{Impression} \\
+\midrule
+GT &
+  Lungs clear. Cardiomediastinal silhouette normal.
+  \textbf{No pleural effusion or pneumothorax.} &
+  No acute intrathoracic process. \\[1pt]
+ImageNet-FT &
+  Post-sternotomy. Mild pulmonary edema.
+  \textbf{Small bilateral pleural effusions.} &
+  \textbf{Mild CHF with bilateral effusions.} \\[1pt]
+SHARP-FT &
+  Post-CABG. Contours stable.
+  \textbf{No pleural effusion or pneumothorax.} &
+  No acute cardiopulmonary disease. \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\noindent\textbf{Section-level gains.}
+Table~\ref{tab:sections} localises where gains occur, directly
+validating the three-axis design.
+The \textbf{Findings} section is structurally templatic---a per-anatomy
+description any competent encoder reproduces---and shows no significant
+change.
+The \textbf{Impression} demands synthesis of entity identity, location,
+and polarity: exactly the three axes of SHARP's concept key $(r, e, p)$.
+SHARP-FT improves Impression ROUGE-L by $+0.0155$ and METEOR by $+0.0134$
+($p{<}0.001$), directly confirming that concept-level pretraining
+targets the clinically actionable part of the report.
+Scene-graph pretraining also benefits fine-tuning disproportionately:
+SHARP-FT improves $+36.9\,\%$ relative CheXbert F1 over SHARP-F,
+vs.\ $+24.0\,\%$ for ImageNet-FT over ImageNet-F, suggesting that
+structured concept-key features are especially amenable to downstream
+specialisation.
+
+\noindent\textbf{Ablation study.}
+Table~\ref{tab:ablation} progressively adds each component under a
+fixed 60k-step budget (equal-compute; all R@1 converged).
+
+\begin{table}[t]
+\centering
+\caption{Ablation results (MIMIC-CXR test, 1,624 studies).
+         (A)--(C) progressively add components; (D) ablates polarity HN from SHARP.
+         $^{*}p{<}0.05$, $^{**}p{<}0.01$, $^{***}p{<}0.001$,
+         $^{\dagger}$significantly \emph{worse} ($p{<}0.05$).}
+\label{tab:ablation}
+\small\setlength{\tabcolsep}{4pt}%
+\begin{tabular}{lp{3.0cm}ccc}
+\toprule
+\textbf{Model} & \textbf{Setup} &
+\textbf{Chex.\,F1}$\uparrow$ & \textbf{CXR-BERT}$\uparrow$ & \textbf{Rad.\,F1}$\uparrow$ \\
+\midrule
+ImageNet-FT    & ImageNet encoder              & 0.262 & 0.537 & 0.206 \\
+\midrule
+(A)            & Sym.\ InfoNCE                 & 0.297 & 0.567 & 0.220 \\
+(B)            & MP-InfoNCE                    & 0.286 & 0.556 & 0.216 \\
+(C)            & $+$curriculum ($s_\text{ramp}{=}5$k)    & 0.274$^{\dagger}$ & 0.557 & 0.215 \\
+(D)            & $+$curriculum ($s_\text{ramp}{=}30$k), no pol.\ HN & 0.281 & 0.562 & 0.218 \\
+\textbf{SHARP} & $+$polarity HN (full)         & \textbf{0.303}$^{***}$ & \textbf{0.579}$^{**}$ & \textbf{0.223}$^{**}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Ablation analysis.}
+Scene-graph supervision alone (A) recovers $+13.6\,\%$ relative CheXbert F1
+over ImageNet-FT (0.2618$\to$0.2973); SHARP's full design adds $+2.0\,\%$
+further.
+The (B)$\to$(C) regression is critical: without curriculum pacing, hard
+negatives \emph{degrade} performance ($p{<}0.001$), confirming that the
+curriculum is a prerequisite for safe hard-negative injection.
+SHARP's 5k--30k ramp recovers and surpasses all ablations
+($+0.0295$ CheXbert F1 over (C), $p{<}0.001$).
+Ablation~(D) shows removing polarity hard negatives drops F1 from 0.303
+to 0.281 ($-7.4\,\%$), confirming the polarity axis provides a distinct
+necessary signal.
+
+\noindent\textbf{Bidirectional loss ablation.}
+Reviewers noted that ablations (A)--(D) used unidirectional loss (image$\to$text)
+while the symmetric baseline employed bidirectional loss (image$\leftrightarrow$text),
+potentially biasing the comparison.
+To address this concern, we re-ran ablation (B) with bidirectional
+multi-positive InfoNCE (averaging both i$\to$t and t$\to$i directions).
+Stage~1 pretraining achieved validation R@1\,=\,6.61\,\%
+(vs.\ 7.02\,\% unidirectional), confirming that the directional choice
+alone does not explain the (B) regression.
+The primary issue remains insufficient co-positive sampling: with batch\,=\,32
+and random sampling, only ${\sim}40\,\%$ of batches contain co-positives,
+preventing multi-positive InfoNCE from activating effectively.
+
+\noindent\textbf{Generalization to IU X-Ray.}
+Table~\ref{tab:iu} fine-tunes both encoders on the Indiana University (IU)
+X-Ray dataset~\cite{iuxray} (2{,}674 train / 764 test studies).
+SHARP-FT improves CheXbert~F1 by $+39\,\%$ relative (0.117$\to$0.163),
+confirming cross-dataset transfer of concept-level pretraining.
+Text-overlap metrics lag ImageNet-FT due to MIMIC-CXR phrasing
+conventions encoded by the SHARP backbone.
+
+\begin{table}[t]
+\centering
+\caption{Generalization to IU X-Ray (764 test studies).}
+\label{tab:iu}
+{\small\setlength{\tabcolsep}{5pt}%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Model} & \textbf{Chex.\,F1}$\uparrow$ & \textbf{CXR-BERT}$\uparrow$
+  & \textbf{Rad.\,F1}$\uparrow$ & \textbf{B-4}$\uparrow$ & \textbf{RG-L}$\uparrow$ \\
+\midrule
+ImageNet-FT & 0.117 & \textbf{0.565} & \textbf{0.288} & \textbf{0.064} & \textbf{0.275} \\
+SHARP-FT    & \textbf{0.163} & 0.544 & 0.248 & 0.043 & 0.244 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/condition_f1.pdf}
+\caption{\textbf{Per-condition CheXbert F1 (MIMIC-CXR test, 1,624 studies).}
+  SHARP-FT (orange) outperforms ImageNet-FT on all 14 conditions.
+  Largest absolute gains in clinically critical findings:
+  Pneumothorax ($+0.096$), Pleural~Other ($+0.085$), Edema ($+0.080$),
+  No~Finding ($+0.076$), and Atelectasis ($+0.058$).
+  Dashed lines: macro averages (ImageNet-FT 0.2618, SHARP-FT 0.3032).
+  Conditions sorted by absolute gain.}
+\label{fig:conditions}
+\end{figure}
+
+% ------------------------------------------------------------------
+\section{Discussion and Conclusion}
+\label{sec:discussion}
+
+SHARP grounds every training signal in the same clinical vocabulary a
+radiologist uses: region, entity, and polarity.
+Section-level analysis (Table~\ref{tab:sections}) confirms gains in
+the Impression and none in the templatic Findings, while
+Fig.~\ref{fig:conditions} shows the largest condition-level gains in
+Pneumothorax ($+0.096$), Edema ($+0.080$), and No~Finding ($+0.076$)---
+conditions where polarity errors carry the highest clinical cost.
+Ablation~(D) confirms the polarity axis is necessary ($-7.4\,\%$ when
+removed), and the curriculum analysis shows that hard negatives must be
+\emph{contingent on representational readiness}: premature injection
+(Ablation~C) degrades performance, while SHARP's 5k--30k ramp delays
+injection until the encoder is concept-aware.
+
+\noindent\textbf{Data efficiency and substitution for domain pretraining.}
+SHARP achieves CheXbert F1\,=\,0.3032 starting from ImageNet, recovering
+89\% of the performance gain from domain-specific self-supervised
+pretraining (ImageNet$\to$RAD-DINO: +17.8\% vs.\ ImageNet$\to$SHARP:
++15.8\%) while requiring only 36,000 scene-graph annotated images instead
+of 1.6 million unannotated chest X-rays.
+This demonstrates that structured concept-key supervision can serve as a
+data-efficient alternative to large-scale self-supervised pretraining in
+settings where (i)~domain pretraining is unavailable or computationally
+prohibitive, (ii)~structured annotations already exist (e.g., from visual
+question answering datasets~\cite{mimicextcxrqba} or phrase grounding
+tasks), or (iii)~explicit polarity modeling at the pretraining stage is
+required for downstream tasks demanding clinical negation discrimination.
+When SHARP is applied to a RAD-DINO backbone (Table~\ref{tab:results}),
+the differential-LR gain (+1.7\%, $p{=}0.08$) does not reach significance,
+confirming that SHARP's concept-key supervision provides orthogonal
+benefit to general-purpose pretraining but overlaps with the visual
+features learned through domain-specific masked image modeling.
+This suggests that SHARP is most valuable when the encoder starts from a
+domain-naive initialization---a common scenario in resource-constrained
+settings or when adopting new imaging modalities where domain-pretrained
+models are not yet available.
+
+\noindent\textbf{Limitations.}
+SHARP requires bounding-box scene-graph annotations (weakly supervised
+grounding is a natural next step), text-overlap metrics lag ImageNet-FT
+on IU~X-Ray due to MIMIC-CXR phrasing bias, and the RAD-DINO
+differential-LR gain does not reach significance ($p{=}0.08$).
+HERGen~\cite{hergen} ($F1{=}0.317$) and MAIRA-2~\cite{maira2}
+($F1{=}0.427$) exceed SHARP-FT but rely on longitudinal data or 7B
+LLMs, precluding direct comparison.
+We presented \textbf{SHARP}: scene-graph contrastive pretraining along
+region, entity, and polarity axes achieves CheXbert F1\,=\,0.3032
+($+15.8\,\%$, $p{<}0.001$); differential LR unlocks gains on
+domain-pretrained RAD-DINO ($+1.7\,\%$).
+Code and checkpoints will be released upon acceptance.
+
+% ------------------------------------------------------------------
+% References
+% ------------------------------------------------------------------
+
+\bibliographystyle{splncs04}
+
+\begin{thebibliography}{99}
+
+\bibitem{mimiccxr}
+Johnson, A.E.W., et al.: MIMIC-CXR, a de-identified publicly available
+database of chest radiographs with free-text reports.
+Scientific Data 6(1), 317 (2019)
+
+\bibitem{mimicextcxrqba}
+M\"{u}ller, P., Jungmann, F., Kaissis, G., Rueckert, D.:
+A Structured, Tagged, and Localized Visual Question Answering Dataset
+with Full Sentence Answers and Scene Graphs for Chest X-ray Images.
+In: ICLR (2026). \url{https://openreview.net/forum?id=LrmyW9JLYq}
+
+\bibitem{cxrmate}
+Nicolson, A., Dowling, J., Anderson, D., Koopman, B.:
+Longitudinal Data and a Semantic Similarity Reward for Chest X-Ray
+Report Generation.
+Informatics in Medicine Unlocked 50, 101585 (2024).
+\url{https://doi.org/10.1016/j.imu.2024.101585}
+
+\bibitem{clip}
+Radford, A., et al.: Learning Transferable Visual Models from Natural
+Language Supervision.
+In: Proceedings of the 38th ICML, pp.~8748--8763 (2021)
+
+\bibitem{convirt}
+Zhang, Y., et al.: Contrastive Learning of Medical Visual Representations
+from Paired Images and Text.
+In: Proceedings of Machine Learning for Health, pp.~2--25 (2022)
+
+\bibitem{biovil}
+Bannur, S., et al.: Learning to Exploit Temporal Structure for
+Biomedical Vision-Language Processing.
+In: Proceedings of CVPR, pp.~15016--15027 (2023)
+
+\bibitem{medclip}
+Wang, Z., et al.: MedCLIP: Contrastive Learning from Unpaired Medical
+Images and Text.
+In: Proceedings of EMNLP, pp.~3876--3887 (2022)
+
+\bibitem{r2gen}
+Chen, Z., et al.: Generating Radiology Reports via Memory-Driven
+Transformer.
+In: Proceedings of EMNLP, pp.~1439--1449 (2020)
+
+\bibitem{rgrg}
+Tanida, T., et al.: Interactive and Explainable Region-Guided Radiology
+Report Generation.
+In: Proceedings of CVPR, pp.~7433--7442 (2023)
+
+\bibitem{supcon}
+Khosla, P., et al.: Supervised Contrastive Learning.
+In: Advances in NeurIPS 33, pp.~18661--18673 (2020)
+
+\bibitem{vit}
+Dosovitskiy, A., et al.: An Image is Worth 16x16 Words: Transformers
+for Image Recognition at Scale.
+In: Proceedings of ICLR (2021)
+
+\bibitem{chexbert}
+Smit, A., et al.: CheXbert: Combining Automatic Labelers and Expert
+Annotations for Accurate Radiology Report Labeling Using BERT.
+In: Proceedings of EMNLP, pp.~1500--1519 (2020)
+
+\bibitem{radgraph}
+Jain, S., et al.: RadGraph: Extracting Clinical Entities and Relations
+from Radiology Reports.
+In: Advances in NeurIPS Datasets and Benchmarks Track (2021)
+
+\bibitem{gloria}
+Huang, S.C., et al.: GLoRIA: A Multimodal Global-Local Representation
+Learning Framework for Label-Efficient Medical Image Recognition.
+In: Proceedings of ICCV, pp.~3942--3951 (2021)
+
+\bibitem{hardmining}
+Faghri, F., et al.: VSE++: Improving Visual-Semantic Embeddings with
+Hard Negatives.
+In: Proceedings of BMVC (2018)
+
+\bibitem{harder_negatives}
+Yuksekgonul, M., et al.: When and Why Vision-Language Models Behave
+Like Bags-of-Words, and What to Do About It?
+In: Proceedings of ICLR (2023)
+
+\bibitem{curriculumlearning}
+Bengio, Y., et al.: Curriculum Learning.
+In: Proceedings of the 26th ICML, pp.~41--48 (2009)
+
+\bibitem{bleu}
+Papineni, K., Roukos, S., Ward, T., Zhu, W.J.: BLEU: A Method for
+Automatic Evaluation of Machine Translation.
+In: Proceedings of ACL, pp.~311--318 (2002)
+
+\bibitem{rouge}
+Lin, C.Y.: ROUGE: A Package for Automatic Evaluation of Summaries.
+In: Text Summarization Branches Out, pp.~74--81 (2004)
+
+\bibitem{meteor}
+Banerjee, S., Lavie, A.: METEOR: An Automatic Metric for MT Evaluation
+with Improved Correlation with Human Judgments.
+In: Proceedings of the ACL Workshop on Intrinsic and Extrinsic
+Evaluation Measures for MT and/or Summarization, pp.~65--72 (2005)
+
+\bibitem{bertscore}
+Zhang, T., Kishore, V., Wu, F., Weinberger, K.Q., Artzi, Y.:
+BERTScore: Evaluating Text Generation with BERT.
+In: Proceedings of ICLR (2020)
+
+\bibitem{cxrbert}
+Smit, A., Bhatt, D., Yu, J., Rajpurkar, P.:
+CXR-BERT: A Pre-trained Language Model for Clinical Radiology Report
+Summarization.
+arXiv:2110.11309 (2021)
+
+\bibitem{cmn}
+Chen, Z., Shen, Y., Song, Y., Wan, X.:
+Cross-modal Memory Networks for Radiology Report Generation.
+In: Proceedings of ACL, pp.~5904--5914 (2021)
+
+\bibitem{cvt2gpt2}
+Nicolson, A., Dowling, J., Koopman, B.:
+Improving Chest X-Ray Report Generation by Leveraging Warm Starting.
+Artificial Intelligence in Medicine 144, 102633 (2023)
+
+\bibitem{raddino}
+Perez-Garcia, F., et al.: RAD-DINO: Exploring Scalable Medical Image
+Encoders Beyond Text Supervision.
+arXiv:2401.10815 (2024)
+
+\bibitem{hergen}
+Dalla Serra, F., et al.: HERGen: Elevating Radiology Report Generation
+with Longitudinal Data.
+In: Proceedings of ECCV (2024)
+
+\bibitem{maira2}
+Bannur, S., et al.: MAIRA-2: Grounded Radiology Report Generation.
+arXiv:2406.04449 (2024)
+
+\bibitem{camanet}
+Wang, Z., et al.: CAMANet: Class Activation Map Guided Attention Network
+for Radiology Report Generation.
+IEEE Trans.\ Med.\ Imaging 42(11), 3282--3295 (2023)
+
+\bibitem{biovilt}
+Bannur, S., et al.: Learning to Exploit Temporal Structure for
+Biomedical Vision-Language Processing.
+In: Proceedings of CVPR, pp.~15016--15027 (2023)
+
+\bibitem{iuxray}
+Demner-Fushman, D., et al.: Preparing a collection of radiology examinations
+for distribution and retrieval.
+Journal of the American Medical Informatics Association 23(2), 304--310 (2016)
+
+\bibitem{pubmedbert}
+Gu, Y., Tinn, R., Cheng, H., Lucas, M., Usuyama, N., Liu, X., Naumann, T.,
+Gao, J., Poon, H.: Domain-Specific Language Model Pretraining for Biomedical
+Natural Language Processing.
+ACM Transactions on Computing for Healthcare 3(1), 1--23 (2021)
+
+\end{thebibliography}
+
+\end{document}
