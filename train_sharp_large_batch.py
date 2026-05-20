@@ -967,6 +967,10 @@ def main(args):
 
             print(f"   Built manifest: {len(crop_manifest):,} pairs from {len(sample_files):,} files")
 
+            # CRITICAL: Update dataset to use the manifest
+            train_ds.crop_manifest = crop_manifest
+            train_ds._virtual_len = len(crop_manifest)
+
         print(f"\n[*] Using PAIRED SAMPLING - guaranteed co-positives!")
         print(f"   Each batch will have {args.batch_size // 2} concept keys, 2 instances each")
 
