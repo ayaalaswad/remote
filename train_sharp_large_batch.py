@@ -849,6 +849,13 @@ def main(args):
         scene_files, study_to_split, study_to_subject
     )
 
+    # -- 3b. [ABLATION] Limit training files if requested (for Exp 2b control)
+    if args.max_train_files is not None:
+        import random
+        original_count = len(train_files)
+        train_files = random.Random(42).sample(train_files, min(args.max_train_files, len(train_files)))
+        print(f"\n[ABLATION] Limited training files: {original_count:,} → {len(train_files):,} (max_train_files={args.max_train_files})")
+
     # -- 4. Vocabulary (from train files only, includes neg phrases)
     vocab_path = output_dir / 'p3_vocab.json'
     if vocab_path.exists():
@@ -1334,6 +1341,8 @@ if __name__ == "__main__":
     p.add_argument("--num_workers",    type=int,   default=4)
     p.add_argument("--vocab_size",     type=int,   default=10000)
     p.add_argument("--val_gallery_size", type=int, default=2000)
+    p.add_argument("--max_train_files",  type=int, default=None,
+                   help="Limit number of training files (for dataset size ablations like Exp 2b)")
 
     # NEW: Bidirectional loss and paired sampling
     p.add_argument("--bidirectional",  action="store_true",
