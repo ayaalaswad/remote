@@ -854,7 +854,7 @@ def main(args):
         import random
         original_count = len(train_files)
         train_files = random.Random(42).sample(train_files, min(args.max_train_files, len(train_files)))
-        print(f"\n[ABLATION] Limited training files: {original_count:,} → {len(train_files):,} (max_train_files={args.max_train_files})")
+        print(f"\n[ABLATION] Limited training files: {original_count:,} -> {len(train_files):,} (max_train_files={args.max_train_files})")
 
     # -- 4. Vocabulary (from train files only, includes neg phrases)
     vocab_path = output_dir / 'p3_vocab.json'
