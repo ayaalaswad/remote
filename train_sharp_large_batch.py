@@ -851,7 +851,6 @@ def main(args):
 
     # -- 3b. [ABLATION] Limit training files if requested (for Exp 2b control)
     if args.max_train_files is not None:
-        import random
         original_count = len(train_files)
         train_files = random.Random(42).sample(train_files, min(args.max_train_files, len(train_files)))
         print(f"\n[ABLATION] Limited training files: {original_count:,} -> {len(train_files):,} (max_train_files={args.max_train_files})")
