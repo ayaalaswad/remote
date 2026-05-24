@@ -154,9 +154,9 @@ def tokenize_text(text, vocab, max_len=256):
 
 def find_study_image(patient_id, study_id, image_dir):
     """Find first image in study directory"""
-    # Construct path: p{XX}/{patient_id}/{study_id}/
+    # Construct path: files/p{XX}/{patient_id}/{study_id}/
     p_prefix = f"p{patient_id[1:3]}"  # p10 from p10000032
-    study_dir = Path(image_dir) / p_prefix / patient_id / study_id
+    study_dir = Path(image_dir) / "files" / p_prefix / patient_id / study_id
 
     if not study_dir.exists():
         return None
