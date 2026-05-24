@@ -118,9 +118,9 @@ python check_exp4_best.py  # Shows step number and R@1
 ```cmd
 cd C:\Users\aya.alaswad\remote\phase1_analysis
 git pull
-run_phase1_FIXED.bat
+run_phase1_WORKING.bat
 ```
-**Note**: Use FIXED version - has study ID extraction fix + debug output
+**Note**: Use WORKING version - extracts patient_id+study_id from scene graphs (not dicom_id which is empty)
 
 ### Start Exp #4 v2
 ```cmd
@@ -183,9 +183,10 @@ git pull
 - **Restricted country**: Google Drive blocked, use VPN or manual transfer for CheXbert
 
 ### Import Issues in Phase 1
-- **Phase 1 versions**: Original had import errors, SIMPLE had partitioning bug
-- **USE `run_phase1_FIXED.bat`**: Has both fixes (zero imports + proper study ID extraction)
-- **Study ID extraction**: Must handle `.scene_graph.json` suffix and add 's' prefix to CSV IDs
+- **Phase 1 versions**: Original had import errors, SIMPLE had partitioning bug, FIXED had dicom_id bug
+- **USE `run_phase1_WORKING.bat`**: Uses patient_id+study_id from scene graphs (dicom_id field is empty)
+- **Scene graph format**: Has `patient_id` and `study_id` (NOT `dicom_id`)
+- **Image lookup**: Find first .jpg in study directory (studies have multiple images)
 - **Class names**: `ImageEncoderViT` and `ImprovedTextEncoder` (NOT `ImageEncoder` or `TextEncoder`)
 - **Parameters**: `embedding_dim=256` (NOT `d_model=128`)
 
@@ -256,9 +257,9 @@ git pull
 REM 2. Start Exp #4 v2 (terminal 1, ~20h)
 run_exp4_v2_PROPER.bat
 
-REM 3. Run Phase 1 (terminal 2, ~1h, parallel)
+REM 3. Run Phase 1 (terminal 2, ~30min for 1000 samples, parallel)
 cd phase1_analysis
-run_phase1_FIXED.bat
+run_phase1_WORKING.bat
 
 REM 4. Monitor progress
 powershell Get-Content D:\experiments\exp4_v2_large_batch_PROPER\training.log -Wait -Tail 5
