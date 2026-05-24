@@ -118,9 +118,9 @@ python check_exp4_best.py  # Shows step number and R@1
 ```cmd
 cd C:\Users\aya.alaswad\remote\phase1_analysis
 git pull
-run_phase1_SIMPLE.bat
+run_phase1_FIXED.bat
 ```
-**Note**: Use SIMPLE version (not `run_phase1.bat`) - has zero import dependencies
+**Note**: Use FIXED version - has study ID extraction fix + debug output
 
 ### Start Exp #4 v2
 ```cmd
@@ -183,8 +183,9 @@ git pull
 - **Restricted country**: Google Drive blocked, use VPN or manual transfer for CheXbert
 
 ### Import Issues in Phase 1
-- **DO NOT use `run_phase1.bat`**: Has import errors (`ImageEncoder` doesn't exist)
-- **USE `run_phase1_SIMPLE.bat`**: Self-contained, all code in one file
+- **Phase 1 versions**: Original had import errors, SIMPLE had partitioning bug
+- **USE `run_phase1_FIXED.bat`**: Has both fixes (zero imports + proper study ID extraction)
+- **Study ID extraction**: Must handle `.scene_graph.json` suffix and add 's' prefix to CSV IDs
 - **Class names**: `ImageEncoderViT` and `ImprovedTextEncoder` (NOT `ImageEncoder` or `TextEncoder`)
 - **Parameters**: `embedding_dim=256` (NOT `d_model=128`)
 
@@ -257,7 +258,7 @@ run_exp4_v2_PROPER.bat
 
 REM 3. Run Phase 1 (terminal 2, ~1h, parallel)
 cd phase1_analysis
-run_phase1_SIMPLE.bat
+run_phase1_FIXED.bat
 
 REM 4. Monitor progress
 powershell Get-Content D:\experiments\exp4_v2_large_batch_PROPER\training.log -Wait -Tail 5
