@@ -18,8 +18,8 @@ import argparse
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from train_sharp_large_batch import (
-    ImageEncoder,
-    TextEncoder,
+    ImageEncoderViT,
+    ImprovedTextEncoder,
     load_scene_graph,
     partition_scene_files,
 )
@@ -56,8 +56,8 @@ def extract_embeddings_for_experiment(
     state_dict = checkpoint.get("state_dict", checkpoint)
 
     # Initialize encoders
-    img_encoder = ImageEncoder(d_model=128).to(device)
-    txt_encoder = TextEncoder(len(vocab), d_model=128, max_len=256).to(device)
+    img_encoder = ImageEncoderViT(d_model=128).to(device)
+    txt_encoder = ImprovedTextEncoder(len(vocab), d_model=128, max_len=256).to(device)
 
     # Load weights (handle lightning prefixes)
     img_state = {k.replace("img_encoder.", ""): v for k, v in state_dict.items() if "img_encoder" in k}
