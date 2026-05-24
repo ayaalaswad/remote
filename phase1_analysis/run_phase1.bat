@@ -28,11 +28,11 @@ echo Step 1/3: Extracting embeddings from Stage 1 checkpoints
 echo ============================================================================
 echo.
 
-python phase1_analysis\extract_embeddings.py ^
+python extract_embeddings.py ^
   --scene_dir D:\datasets\mimic-ext-cxr-qba\scene_graphs\scene_data ^
   --image_dir D:\datasets\mimic-cxr-jpg ^
   --split_csv D:\datasets\mimic-cxr-jpg\mimic-cxr-2.0.0-split.csv.gz ^
-  --output_dir phase1_analysis\embeddings ^
+  --output_dir embeddings ^
   --max_samples 5000 ^
   --device cuda
 
@@ -51,9 +51,9 @@ echo ===========================================================================
 echo.
 
 REM Visualize by entity (most informative)
-python phase1_analysis\visualize_embeddings.py ^
-  --embedding_dir phase1_analysis\embeddings ^
-  --output_dir phase1_analysis\figures ^
+python visualize_embeddings.py ^
+  --embedding_dir embeddings ^
+  --output_dir figures ^
   --method both ^
   --color_by entity
 
@@ -65,9 +65,9 @@ if errorlevel 1 (
 )
 
 REM Also create visualizations by polarity (shows pos/neg distinction)
-python phase1_analysis\visualize_embeddings.py ^
-  --embedding_dir phase1_analysis\embeddings ^
-  --output_dir phase1_analysis\figures ^
+python visualize_embeddings.py ^
+  --embedding_dir embeddings ^
+  --output_dir figures ^
   --method both ^
   --color_by polarity
 
@@ -83,9 +83,9 @@ echo Step 3/3: Computing concept consistency @ top-5
 echo ============================================================================
 echo.
 
-python phase1_analysis\concept_consistency_probe.py ^
-  --embedding_dir phase1_analysis\embeddings ^
-  --output_dir phase1_analysis\consistency ^
+python concept_consistency_probe.py ^
+  --embedding_dir embeddings ^
+  --output_dir consistency ^
   --k 5
 
 if errorlevel 1 (
@@ -101,9 +101,9 @@ echo Phase 1 Complete!
 echo ============================================================================
 echo.
 echo Results saved to:
-echo   - Embeddings:    phase1_analysis\embeddings\
-echo   - Figures:       phase1_analysis\figures\
-echo   - Consistency:   phase1_analysis\consistency\
+echo   - Embeddings:    embeddings\
+echo   - Figures:       figures\
+echo   - Consistency:   consistency\
 echo.
 echo Key outputs:
 echo   - stage1_comparison_tsne_entity.png
