@@ -36,23 +36,26 @@ def main():
     output_file = output_dir / "chexbert.pth"
 
     if output_file.exists():
-        print(f"✓ CheXbert checkpoint already exists: {output_file}")
-        print(f"  Size: {output_file.stat().st_size / (1024**2):.1f} MB")
-        return
+        file_size = output_file.stat().st_size
+        file_size_mb = file_size / (1024**2)
+
+        # CheXbert should be ~438 MB. If file is too small, it's corrupted.
+        if file_size_mb >= 400:
+            print(f"✓ CheXbert checkpoint already exists: {output_file}")
+            print(f"  Size: {file_size_mb:.1f} MB")
+            return
+        else:
+            print(f"⚠ Existing file is corrupted (only {file_size_mb:.1f} MB, expected ~438 MB)")
+            print(f"  Deleting and re-downloading...")
+            output_file.unlink()
 
     # Try multiple sources
+    # Note: Most public mirrors are down or require authentication
+    # The working approach is to use the Google Drive link from the official repo
     sources = [
         {
-            "name": "Stanford Box (direct)",
-            "url": "https://stanfordmedicine.box.com/shared/static/c5hxb8p78v6q33b0pxai32nqk6hd62jl.pth"
-        },
-        {
-            "name": "Hugging Face Mirror",
-            "url": "https://huggingface.co/StanfordAIMI/CheXbert/resolve/main/chexbert.pth"
-        },
-        {
-            "name": "GitHub Release Mirror",
-            "url": "https://github.com/stanfordmlgroup/CheXbert/releases/download/v1.0/chexbert.pth"
+            "name": "Direct download (Google Drive ID: 1DS6NYirOXQf8qYieSVMvqNwuOlgAbM_E)",
+            "url": "https://drive.google.com/uc?export=download&id=1DS6NYirOXQf8qYieSVMvqNwuOlgAbM_E"
         }
     ]
 
@@ -109,10 +112,17 @@ def main():
     print("\n" + "="*80)
     print("ERROR: All download sources failed!")
     print("="*80)
-    print("\nManual alternatives:")
-    print("1. Download from: https://github.com/stanfordmlgroup/CheXbert")
-    print("2. Or use Google Drive backup (check CheXbert repo README)")
-    print(f"3. Place the file at: {output_file}")
+    print("\nManual download instructions:")
+    print("\nOption 1: Use gdown (recommended):")
+    print("  pip install gdown")
+    print("  gdown 1DS6NYirOXQf8qYieSVMvqNwuOlgAbM_E -O " + str(output_file))
+    print("\nOption 2: Browser download:")
+    print("  1. Open: https://drive.google.com/file/d/1DS6NYirOXQf8qYieSVMvqNwuOlgAbM_E/view")
+    print("  2. Click 'Download' (top right)")
+    print(f"  3. Move downloaded file to: {output_file}")
+    print("\nOption 3: Check official repo:")
+    print("  https://github.com/stanfordmlgroup/CheXbert")
+    print("  (Look for latest download links in README)")
     sys.exit(1)
 
 if __name__ == "__main__":
