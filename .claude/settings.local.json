@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(gh repo view:*)",
+      "WebSearch",
+      "WebFetch(domain:conferences.miccai.org)",
+      "WebFetch(domain:sites.google.com)",
+      "WebFetch(domain:hula-ai.github.io)",
+      "WebFetch(domain:grail-miccai.github.io)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:www.researchgate.net)",
+      "Bash(pdflatex:*)",
+      "Bash(cmd.exe /c compile_paper.bat)",
+      "Bash(ls:*)",
+      "Bash(git add train_sharp_large_batch.py RESUMABLE_TRAINING_GUIDE.md RUN_EXPERIMENTS.md find_data.bat)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git add:*)",
+      "Bash(python:*)",
+      "Bash(findstr:*)",
+      "Bash(checkpoint \")",
+      "Bash(dir:*)",
+      "WebFetch(domain:api.github.com)"
+    ]
+  }
+}

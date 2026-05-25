@@ -1,4 +1,4 @@
-"""
+ """
 Phase 0 Diagnostic: Sanity-check the paired sampler.
 
 Dump 10 random batches and verify:
