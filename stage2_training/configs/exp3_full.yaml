@@ -5,7 +5,7 @@ ckpt_zoo_dir: checkpoints
 module: modules.lightning_modules.single
 definition: SingleCXR
 
-strategy: ddp
+strategy: auto
 devices: 1
 num_workers: 5
 
