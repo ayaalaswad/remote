@@ -24,12 +24,12 @@ for exp_id in ['exp1', 'exp2', 'exp3', 'exp4']:
     npz = np.load(f'embeddings/{exp_id}_embeddings.npz')
 
     # Subsample to 1000 points for faster visualization
-    n = min(1000, len(npz['image_embeddings']))
-    idx = np.random.RandomState(42).choice(len(npz['image_embeddings']), n, replace=False)
+    n = min(1000, len(npz['image_embs']))
+    idx = np.random.RandomState(42).choice(len(npz['image_embs']), n, replace=False)
 
     data[exp_id] = {
-        'image': npz['image_embeddings'][idx],
-        'text': npz['text_embeddings'][idx]
+        'image': npz['image_embs'][idx],
+        'text': npz['text_embs'][idx]
     }
     print(f"  {exp_id}: {n} samples")
 
