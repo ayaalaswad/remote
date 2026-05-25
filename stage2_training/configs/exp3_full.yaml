@@ -1,5 +1,5 @@
 exp_dir: experiments
-dataset_dir: datasets
+dataset_dir: D:/datasets
 ckpt_zoo_dir: checkpoints
 
 module: modules.lightning_modules.single
