@@ -1,11 +1,23 @@
 """
 Create missing CSV files for Stage 2 CXRMate training
 
-This script creates:
-1. mimic_cxr_sectioned.csv - Extracted FINDINGS and IMPRESSION sections
+This script creates CSV files matching the OFFICIAL MIT-LCP MIMIC-CXR format:
+
+1. mimic_cxr_sectioned.csv - Extracted report sections
+   Official format (from MIT-LCP/mimic-cxr):
+   Columns: ['study', 'impression', 'findings', 'last_paragraph', 'comparison']
+
 2. splits_reports_metadata.csv - Merged splits + metadata + sections
+   Combined from:
+   - mimic-cxr-2.0.0-split.csv.gz (train/val/test splits)
+   - mimic-cxr-2.0.0-metadata.csv.gz (image metadata)
+   - mimic_cxr_sectioned.csv (report sections)
 
 Based on MIMIC-CXR v2.0.0 structure.
+
+Reference:
+- https://github.com/MIT-LCP/mimic-cxr/blob/master/txt/create_section_files.py
+- https://github.com/aehrc/cxrmate
 """
 
 import os
@@ -18,14 +30,16 @@ from tqdm import tqdm
 
 def extract_section(text, section_name):
     """
-    Extract a section from a MIMIC-CXR report.
+    Extract a section from a MIMIC-CXR report using MIT-LCP's method.
+
+    This matches the official MIT-LCP section extraction logic from create_section_files.py.
 
     Args:
         text: Full report text
         section_name: Section to extract (e.g., 'FINDINGS', 'IMPRESSION')
 
     Returns:
-        Extracted section text, or empty string if not found
+        Extracted section text, or None if not found (to match official format)
     """
     # Pattern to match section header
     # Looks for section name followed by colon or newline
@@ -37,9 +51,9 @@ def extract_section(text, section_name):
         section_text = match.group(1).strip()
         # Clean up extra whitespace
         section_text = re.sub(r'\s+', ' ', section_text)
-        return section_text
+        return section_text if section_text else None
 
-    return ""
+    return None
 
 
 def find_report_file(patient_id, study_id, reports_base_dir):
@@ -125,15 +139,35 @@ def create_sectioned_csv(split_csv_path, reports_base_dir, output_path):
             with open(report_path, 'r', encoding='utf-8') as f:
                 report_text = f.read()
 
-            # Extract sections
+            # Extract sections (matching MIT-LCP official format)
             findings = extract_section(report_text, 'FINDINGS')
             impression = extract_section(report_text, 'IMPRESSION')
+            comparison = extract_section(report_text, 'COMPARISON')
 
+            # Extract last_paragraph: text from last recognized section to end
+            # This is used as fallback for reports without standard sections
+            last_paragraph = None
+            if report_text:
+                # Find the last section marker
+                sections = ['FINDINGS', 'IMPRESSION', 'INDICATION', 'HISTORY', 'COMPARISON', 'TECHNIQUE']
+                last_section_pos = -1
+                for section in sections:
+                    match = list(re.finditer(rf'\b{section}\s*:', report_text, re.IGNORECASE))
+                    if match:
+                        last_section_pos = max(last_section_pos, match[-1].end())
+
+                if last_section_pos > -1:
+                    last_para_text = report_text[last_section_pos:].strip()
+                    if last_para_text:
+                        last_paragraph = re.sub(r'\s+', ' ', last_para_text)
+
+            # Official MIT-LCP format: ['study', 'impression', 'findings', 'last_paragraph', 'comparison']
             sectioned_data.append({
                 'study': study_id,
-                'subject_id': subject_id,
+                'impression': impression,
                 'findings': findings,
-                'impression': impression
+                'last_paragraph': last_paragraph,
+                'comparison': comparison
             })
 
             found_count += 1
@@ -141,15 +175,17 @@ def create_sectioned_csv(split_csv_path, reports_base_dir, output_path):
         except Exception as e:
             print(f"\n  WARNING: Error reading {report_path}: {e}")
             missing_count += 1
+            # Add empty entry with None values (matching official format)
             sectioned_data.append({
                 'study': study_id,
-                'subject_id': subject_id,
-                'findings': '',
-                'impression': ''
+                'impression': None,
+                'findings': None,
+                'last_paragraph': None,
+                'comparison': None
             })
 
-    # Create DataFrame
-    sectioned_df = pd.DataFrame(sectioned_data)
+    # Create DataFrame with official MIT-LCP column order
+    sectioned_df = pd.DataFrame(sectioned_data, columns=['study', 'impression', 'findings', 'last_paragraph', 'comparison'])
 
     # Save to CSV
     print(f"\nSaving to: {output_path}")
@@ -212,23 +248,19 @@ def create_merged_csv(split_csv_path, metadata_csv_path, sectioned_df, output_pa
     merged_df['study_id'] = merged_df['study_id'].astype(str)
     sectioned_df['study'] = sectioned_df['study'].astype(str)
 
-    # Merge
+    # Merge on study_id
     final_df = pd.merge(
         merged_df,
         sectioned_df,
         left_on='study_id',
         right_on='study',
         how='left',
-        suffixes=('', '_section')
+        suffixes=('', '_dup')
     )
 
-    # Drop duplicate 'study' column (keep study_id)
+    # Drop duplicate 'study' column (keep study_id from main data)
     if 'study' in final_df.columns:
         final_df = final_df.drop(columns=['study'])
-
-    # Drop duplicate subject_id column if exists
-    if 'subject_id_section' in final_df.columns:
-        final_df = final_df.drop(columns=['subject_id_section'])
 
     print(f"  Final rows: {len(final_df)}")
     print(f"  Final columns: {list(final_df.columns)}")
