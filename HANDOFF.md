@@ -1,7 +1,7 @@
 # HANDOFF: SHARP Rebuttal Preparation
 
-**Date**: 2026-05-24
-**Status**: Stage 1 complete, Phase 1 ready, awaiting Exp #4 v2 and Stage 2
+**Date**: 2026-05-25
+**Status**: Phase 1 COMPLETE, Stage 2 BLOCKED on preprocessing, Exp #4 v2 ready to start
 
 ---
 
@@ -16,16 +16,21 @@ This is rebuttal preparation for a medical imaging paper (SHARP) using multi-pos
 ### ✅ COMPLETE
 - **Stage 1 training**: 5 experiments done (Exp #1-4, #2b)
 - **Confound analysis**: Dataset size vs paired sampling isolated
-- **Key finding**: Forced 100% co-positive pairing collapses performance (4.99% → 0.81%)
-- **Infrastructure**: Phase 1 scripts created, Exp #4 v2 script ready
+- **Key finding**: Forced 100% co-positive pairing collapses performance (4.99% -> 0.81%)
+- **Phase 1 extraction**: All 4 embeddings extracted (exp1/2/3/4_embeddings.npz)
+- **Phase 1 visualization**: UMAP plots created and ready for paper
+- **CheXbert download**: Successfully downloaded (1.22 GB)
+- **CXRMate setup**: Repository cloned, dependencies installed
 
 ### ⏳ IN PROGRESS
-- **Exp #4 v2**: Not yet started (needs 18-20h GPU, proper LR scaling)
-- **Phase 1**: Script ready but not executed (SIMPLE version works)
+- **Stage 2 preprocessing**: Determining approach for data preparation
 
 ### ❌ BLOCKED
-- **CheXbert download**: Google Drive blocked (user in restricted country)
-- **Stage 2**: Cannot start without CheXbert checkpoint (438 MB)
+- **Stage 2 training**: CXRMate expects preprocessed data structure that doesn't exist
+  - Needs: `mimic_cxr_sectioned.csv` (sectioned reports)
+  - Needs: `splits_reports_metadata.csv` (merged metadata)
+  - Needs: PhysioNet-style directory structure
+- **Exp #4 v2**: Not yet started (needs 18-20h GPU, proper LR scaling)
 
 ---
 
@@ -59,8 +64,9 @@ This is rebuttal preparation for a medical imaging paper (SHARP) using multi-pos
 ### Key Scripts
 - `train_sharp_large_batch.py` - Main training script (ImageEncoderViT, ImprovedTextEncoder classes)
 - `run_exp4_v2_PROPER.bat` - Re-run Exp #4 with correct config (100k steps, LR=1.6e-3)
-- `phase1_analysis/run_phase1_SIMPLE.bat` - Extract embeddings (WORKING version, zero import dependencies)
-- `phase1_analysis/extract_embeddings_SIMPLE.py` - Self-contained, no imports from training script
+- `phase1_analysis/extract_embeddings_WORKING.py` - Extract embeddings (uses patient_id+study_id, includes files/ subdirectory)
+- `phase1_analysis/plot_embeddings_SIMPLE.py` - Create UMAP visualizations for paper
+- `stage2_training/run_exp1_exp3.bat` - Train CXRMate with Exp #1 and Exp #3 checkpoints (BLOCKED on preprocessing)
 
 ### Important Documents
 - `EXP4_REVISED_PLAN.md` - Explains why Exp #4 FAIR was wrong and how to fix it
@@ -145,28 +151,81 @@ git pull
 
 ---
 
+## Stage 2 Blocker: CXRMate Data Preprocessing
+
+### Problem
+CXRMate expects a specific directory structure and preprocessed files that don't exist:
+
+**Expected structure:**
+```
+dataset_dir/
+  physionet.org/files/mimic-cxr-jpg/2.0.0/
+    mimic-cxr-2.0.0-split.csv.gz
+    mimic-cxr-2.0.0-metadata.csv.gz
+    files/ (images)
+  mimic_cxr_sections/
+    mimic_cxr_sectioned.csv  <-- MISSING (sectioned reports)
+  mimic_cxr_merged/
+    splits_reports_metadata.csv  <-- MISSING (merged metadata)
+```
+
+**Current structure:**
+```
+D:/datasets/
+  mimic-cxr-jpg/ (images + split/metadata CSVs)
+  mimic-cxr-reports/reports/files/ (raw reports)
+  mimic-ext-cxr-qba/ (scene graphs)
+```
+
+### Required Preprocessing
+1. **Extract report sections**: Use MIT-LCP/mimic-cxr scripts to extract Findings/Impression sections
+2. **Create `mimic_cxr_sectioned.csv`**: Sectioned reports for all studies
+3. **Create `splits_reports_metadata.csv`**: Merge splits + metadata + reports
+4. **Reorganize directory structure**: Match CXRMate's expected paths
+
+### Options
+- **Option A (Proper)**: Run MIT-LCP preprocessing scripts (30-60 min, most fair)
+- **Option B (Quick)**: Create symlinks + minimal CSV generation (15-20 min, potentially unfair if sectioning matters)
+- **Option C (Skip)**: Focus on Stage 1 R@1 + UMAP plots only (0 min, weaker rebuttal)
+
+**User wants Stage 2 results**, so need to choose Option A or B.
+
+---
+
+## Phase 1 Results (COMPLETE)
+
+### Embeddings Extracted
+- `phase1_analysis/embeddings/exp1_embeddings.npz` (35.7 MB, 12,650 samples)
+- `phase1_analysis/embeddings/exp2_embeddings.npz` (35.7 MB)
+- `phase1_analysis/embeddings/exp3_embeddings.npz` (35.7 MB)
+- `phase1_analysis/embeddings/exp4_embeddings.npz` (35.7 MB)
+
+### Plots Created (Ready for Paper)
+- `phase1_analysis/plots/umap_all_experiments.png` (2x2 grid, all 4 experiments)
+- `phase1_analysis/plots/comparison_baseline_vs_best.png` (Baseline vs Large Batch)
+
+**Key observations for rebuttal:**
+- Exp #2 (paired sampling): Poor image-text clustering, explains 0.81% R@1
+- Exp #4 (large batch): Tighter clusters than baseline, consistent with 6.99% R@1
+
+---
+
 ## Open Questions / Next Steps
 
 ### Immediate (Today)
-1. **Run Exp #4 v2** (~18-20h GPU): `run_exp4_v2_PROPER.bat`
-2. **Run Phase 1** (~1h, parallel): `cd phase1_analysis && run_phase1_SIMPLE.bat`
-3. **Solve CheXbert download**: VPN + Google Drive, OR colleague transfer, OR skip Stage 2
+1. **Resolve Stage 2 preprocessing** (CRITICAL): Choose Option A or B above
+2. **Run Exp #4 v2** (~18-20h GPU): `run_exp4_v2_PROPER.bat` (can run in parallel)
+3. **Start Stage 2 once preprocessing done** (~4h training, ~1h testing)
 
 ### After Exp #4 v2 Completes (~20h)
 4. **Analyze Exp #4 v2 R@1**: Does large batch beat baseline (6.61%)? This answers R3's main question
 5. **Decide on Stage 2 checkpoints**: Use Exp #1 (6.61%), Exp #3 (6.21%), Exp #4 v2 (??%)
 6. **Create findings summary**: Integrate all 5 experiments + Exp #4 v2 result
 
-### After Phase 1 Completes (~1h)
-7. **Review t-SNE/UMAP figures**: `phase1_analysis/figures/*.png`
-8. **Extract concept consistency metrics**: `phase1_analysis/consistency/*.json`
-
-### Stage 2 (Blocked on CheXbert)
-9. **Download CheXbert**: 438 MB file, Google Drive ID `1DS6NYirOXQf8qYieSVMvqNwuOlgAbM_E`
-10. **Set up Stage 2 pipeline**: CXRMate fine-tuning scripts
-11. **Run Stage 2 training**: ~3-4 days for 3 encoders (Exp #1, #3, #4v2)
-12. **Extract CheXbert F1**: Macro + 14 per-condition metrics
-13. **Compute bootstrap CIs**: 95% confidence intervals for significance tests
+### After Stage 2 Training Completes (~4h)
+7. **Run Stage 2 testing**: `run_test_exp1_exp3.bat` (~1h)
+8. **Extract CheXbert F1**: Macro + 14 per-condition metrics
+9. **Compare downstream performance**: Exp #1 vs Exp #3 CheXbert F1
 
 ### Rebuttal Writing
 14. **Write R1/R2 response**: CheXbert F1 results + per-condition analysis
@@ -239,9 +298,11 @@ git pull
 
 ### Phase 1 Output
 - **Embeddings**: `phase1_analysis/embeddings/exp{1,2,3,4}_embeddings.npz`
-- **Figures**: `phase1_analysis/figures/*.png` (t-SNE and UMAP)
-- **Metrics**: `phase1_analysis/consistency/*.json`
-- **Max samples**: 5000 (reduce to 1000 if OOM)
+  - Key names: `image_embs`, `text_embs`, `concept_keys` (NOT `image_embeddings`)
+- **Plots**: `phase1_analysis/plots/*.png` (UMAP visualizations, 300 DPI)
+  - `umap_all_experiments.png` - 2x2 grid comparison
+  - `comparison_baseline_vs_best.png` - Baseline vs Large Batch
+- **Max samples**: Used 1000 per experiment for visualization (out of 12,650 extracted)
 
 ---
 
@@ -254,15 +315,24 @@ REM 1. Pull latest code
 cd C:\Users\aya.alaswad\remote
 git pull
 
-REM 2. Start Exp #4 v2 (terminal 1, ~20h)
+REM 2. View Phase 1 plots (DONE)
+cd phase1_analysis\plots
+explorer .  REM Opens folder with umap_all_experiments.png and comparison_baseline_vs_best.png
+
+REM 3. Start Exp #4 v2 (terminal 1, ~20h)
+cd C:\Users\aya.alaswad\remote\sharp_experiments
 run_exp4_v2_PROPER.bat
 
-REM 3. Run Phase 1 (terminal 2, ~30min for 1000 samples, parallel)
-cd phase1_analysis
-run_phase1_WORKING.bat
+REM 4. Run Stage 2 preprocessing (terminal 2, ~30-60min)
+REM TODO: Need to choose Option A (proper) or Option B (quick) - see Stage 2 Blocker section
 
-REM 4. Monitor progress
+REM 5. After preprocessing, start Stage 2 training (~4h)
+cd C:\Users\aya.alaswad\remote\stage2_training
+run_exp1_exp3.bat
+
+REM 6. Monitor progress
 powershell Get-Content D:\experiments\exp4_v2_large_batch_PROPER\training.log -Wait -Tail 5
+powershell Get-Content logs\exp1_train.log -Wait -Tail 30
 ```
 
 ---
@@ -276,6 +346,6 @@ powershell Get-Content D:\experiments\exp4_v2_large_batch_PROPER\training.log -W
 
 ---
 
-**Last updated**: 2026-05-24
-**Session ID**: 8aff32f8-e444-4d11-b6ec-ca7e58dd8811
-**Status**: Ready for Exp #4 v2 and Phase 1 execution
+**Last updated**: 2026-05-25
+**Session ID**: Continuation session
+**Status**: Phase 1 COMPLETE, Stage 2 BLOCKED on preprocessing decision (Option A vs B)
