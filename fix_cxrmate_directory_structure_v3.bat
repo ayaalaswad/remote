@@ -31,6 +31,13 @@ echo.
 echo Creating mimic_cxr_sectioned junction...
 mklink /J "D:\datasets\physionet.org\files\mimic-cxr-jpg\2.0.0\mimic_cxr_sectioned" "D:\datasets\mimic-cxr-jpg\mimic_cxr_sectioned"
 
+REM Also create junction for mimic_cxr_merged at parent level
+echo.
+echo Creating mimic_cxr_merged junction at parent level...
+if not exist "D:\datasets\physionet.org\files\mimic-cxr-jpg\mimic_cxr_merged" (
+    mklink /J "D:\datasets\physionet.org\files\mimic-cxr-jpg\mimic_cxr_merged" "D:\datasets\mimic_cxr_merged"
+)
+
 echo.
 echo ========================================
 echo Verifying Files
