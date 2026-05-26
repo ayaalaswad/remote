@@ -1,5 +1,5 @@
 exp_dir: experiments
-dataset_dir: D:/datasets
+dataset_dir: D:/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0
 ckpt_zoo_dir: checkpoints
 
 module: modules.lightning_modules.single

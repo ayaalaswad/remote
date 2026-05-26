@@ -44,12 +44,19 @@ D:\datasets\mimic-cxr-jpg\mimic_cxr_sectioned\mimic_cxr_sectioned.csv (153.6 MB)
 D:\datasets\mimic_cxr_merged\splits_reports_metadata.csv (401.3 MB)
 ```
 
-### MIMIC-CXR Original Files
+### MIMIC-CXR Original Files (Actual Location)
 ```
 D:\datasets\mimic-cxr-jpg\mimic-cxr-2.0.0-split.csv.gz
 D:\datasets\mimic-cxr-jpg\mimic-cxr-2.0.0-metadata.csv.gz
-D:\datasets\mimic-cxr-jpg\files\
+D:\datasets\mimic-cxr-jpg\files\p10\p10000032\s50414267\02aa804e-...
 D:\datasets\mimic-cxr-reports\reports\files\
+```
+
+### CXRMate Expected Structure (Created via Junction)
+```
+D:\datasets\physionet.org\files\mimic-cxr-jpg\2.0.0\files\  -> junction to D:\datasets\mimic-cxr-jpg\files\
+D:\datasets\physionet.org\files\mimic-cxr-jpg\2.0.0\mimic-cxr-2.0.0-split.csv.gz
+D:\datasets\physionet.org\files\mimic-cxr-jpg\2.0.0\mimic-cxr-2.0.0-metadata.csv.gz
 ```
 
 ### Stage 1 Checkpoints
