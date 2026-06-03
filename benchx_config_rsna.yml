@@ -1,0 +1,42 @@
+# BenchX Config: SHARP on RSNA Pneumonia Detection
+# Dataset: ~30k images, binary classification (pneumonia yes/no)
+
+# Model
+model:
+  name: sharp
+  checkpoint: D:/experiments/exp3_hardneg/p3_best.pt  # SHARP's best checkpoint (37.4% F1)
+  backbone: vit_base  # ViT-B/16
+  num_classes: 2
+  freeze_backbone: false  # Fine-tune (not linear probe)
+
+# Data
+data:
+  dataset: rsna_pneumonia
+  data_root: D:/datasets/rsna-pneumonia  # Update this path after download
+  image_size: 224
+  label_fraction: 1.0  # 100% labels (change to 0.01 for 1%, 0.1 for 10%)
+
+# Training
+training:
+  batch_size: 32
+  num_epochs: 30
+  optimizer: adamw
+  learning_rate: 1e-4
+  weight_decay: 0.01
+  warmup_epochs: 2
+
+# Augmentation (match BenchX baselines)
+augmentation:
+  random_crop: true
+  random_flip: true
+  color_jitter: false
+
+# Evaluation
+evaluation:
+  metric: auroc
+  save_best: true
+
+# Output
+output:
+  save_dir: D:/experiments/benchx_results/rsna_sharp
+  log_interval: 100

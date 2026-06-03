@@ -1,0 +1,37 @@
+# BenchX Config: SHARP on VinDr-CXR
+# Dataset: ~18k images, multi-label classification (chest findings)
+
+model:
+  name: sharp
+  checkpoint: D:/experiments/exp3_hardneg/p3_best.pt
+  backbone: vit_base
+  num_classes: 14  # VinDr has 14 findings
+  freeze_backbone: false
+
+data:
+  dataset: vindr_cxr
+  data_root: D:/datasets/vindr-cxr
+  image_size: 224
+  label_fraction: 1.0
+
+training:
+  batch_size: 32
+  num_epochs: 30
+  optimizer: adamw
+  learning_rate: 1e-4
+  weight_decay: 0.01
+  warmup_epochs: 2
+  multilabel: true
+
+augmentation:
+  random_crop: true
+  random_flip: true
+  color_jitter: false
+
+evaluation:
+  metric: auroc
+  save_best: true
+
+output:
+  save_dir: D:/experiments/benchx_results/vindr_sharp
+  log_interval: 100

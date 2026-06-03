@@ -1,0 +1,36 @@
+# BenchX Config: SHARP on SIIM-ACR Pneumothorax
+# Dataset: ~12k images, binary classification (pneumothorax yes/no)
+
+model:
+  name: sharp
+  checkpoint: D:/experiments/exp3_hardneg/p3_best.pt
+  backbone: vit_base
+  num_classes: 2
+  freeze_backbone: false
+
+data:
+  dataset: siim_pneumothorax
+  data_root: D:/datasets/siim-pneumothorax
+  image_size: 224
+  label_fraction: 1.0
+
+training:
+  batch_size: 32
+  num_epochs: 30
+  optimizer: adamw
+  learning_rate: 1e-4
+  weight_decay: 0.01
+  warmup_epochs: 2
+
+augmentation:
+  random_crop: true
+  random_flip: true
+  color_jitter: false
+
+evaluation:
+  metric: auroc
+  save_best: true
+
+output:
+  save_dir: D:/experiments/benchx_results/siim_sharp
+  log_interval: 100

@@ -1,0 +1,37 @@
+# BenchX Config: SHARP on NIH ChestX-ray14
+# Dataset: ~112k images, multi-label classification (14 diseases)
+
+model:
+  name: sharp
+  checkpoint: D:/experiments/exp3_hardneg/p3_best.pt
+  backbone: vit_base
+  num_classes: 14  # Multi-label
+  freeze_backbone: false
+
+data:
+  dataset: nih_chestxray14
+  data_root: D:/datasets/nih-chestxray14
+  image_size: 224
+  label_fraction: 1.0
+
+training:
+  batch_size: 32
+  num_epochs: 30
+  optimizer: adamw
+  learning_rate: 1e-4
+  weight_decay: 0.01
+  warmup_epochs: 2
+  multilabel: true  # Multi-label classification
+
+augmentation:
+  random_crop: true
+  random_flip: true
+  color_jitter: false
+
+evaluation:
+  metric: auroc  # Mean AUROC over 14 classes
+  save_best: true
+
+output:
+  save_dir: D:/experiments/benchx_results/nih_sharp
+  log_interval: 100
