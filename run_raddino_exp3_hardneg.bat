@@ -45,11 +45,9 @@ python train_sharp_raddino_v2.py ^
   --num_workers 4 ^
   --vocab_size 10000 ^
   --val_gallery_size 2000 ^
-  --scene_dir C:\Users\aya.alaswad\remote\scene_data ^
-  --image_dir C:\Users\aya.alaswad\remote\mimic-cxr-jpg ^
-  --split_csv C:\Users\aya.alaswad\remote\mimic-cxr-2.0.0-split.csv.gz ^
-  --scene_list_path C:\Users\aya.alaswad\remote\scene_files.txt ^
-  --crop_cache_dir C:\Users\aya.alaswad\remote\crop_cache ^
+  --scene_dir D:\datasets\mimic-ext-cxr-qba\scene_graphs\scene_data ^
+  --image_dir D:\datasets\mimic-cxr-jpg ^
+  --split_csv D:\datasets\mimic-cxr-jpg\mimic-cxr-2.0.0-split.csv.gz ^
   --output_dir D:\experiments\exp_raddino_hardneg
 
 echo.
