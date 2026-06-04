@@ -1,0 +1,8 @@
+# Base SHARP Model Config
+# Place at: BenchX/configs/_base_/models/sharp.yml
+
+cnn:
+  proto: SHARP
+  checkpoint: D:/experiments/exp3_full_sharp/p3_best.pt
+  feature_dim: 768
+  freeze: False
