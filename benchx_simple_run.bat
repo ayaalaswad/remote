@@ -25,7 +25,7 @@ echo.
 
 REM Copy SHARP model
 echo [2/4] Installing SHARP...
-copy /Y ..\MyReasearch\benchx_sharp_model.py models\sharp.py
+copy /Y ..\benchx_sharp_model.py models\sharp.py
 
 REM Create config directories
 mkdir configs\classification\siim 2>nul
@@ -34,7 +34,7 @@ mkdir configs\classification\nih 2>nul
 mkdir configs\classification\vindr 2>nul
 
 REM Copy configs
-copy /Y ..\MyReasearch\benchx_config_*.yml configs\classification\
+copy /Y ..\benchx_config_*.yml configs\classification\
 
 echo [OK] SHARP integrated
 echo.

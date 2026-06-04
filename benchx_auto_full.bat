@@ -73,7 +73,7 @@ REM ============================================================================
 echo [Step 3/8] Integrating SHARP into BenchX...
 cd C:\Users\aya.alaswad\remote
 
-copy /Y MyReasearch\benchx_sharp_model.py BenchX\models\sharp.py
+copy /Y benchx_sharp_model.py BenchX\models\sharp.py
 if errorlevel 1 (
     echo [ERROR] Failed to copy SHARP model
     exit /b 1
@@ -84,10 +84,10 @@ mkdir BenchX\configs\classification\siim 2>nul
 mkdir BenchX\configs\classification\nih 2>nul
 mkdir BenchX\configs\classification\vindr 2>nul
 
-copy /Y MyReasearch\benchx_config_rsna.yml BenchX\configs\classification\rsna\sharp.yml
-copy /Y MyReasearch\benchx_config_siim.yml BenchX\configs\classification\siim\sharp.yml
-copy /Y MyReasearch\benchx_config_nih.yml BenchX\configs\classification\nih\sharp.yml
-copy /Y MyReasearch\benchx_config_vindr.yml BenchX\configs\classification\vindr\sharp.yml
+copy /Y benchx_config_rsna.yml BenchX\configs\classification\rsna\sharp.yml
+copy /Y benchx_config_siim.yml BenchX\configs\classification\siim\sharp.yml
+copy /Y benchx_config_nih.yml BenchX\configs\classification\nih\sharp.yml
+copy /Y benchx_config_vindr.yml BenchX\configs\classification\vindr\sharp.yml
 
 echo [OK] SHARP integrated
 echo.

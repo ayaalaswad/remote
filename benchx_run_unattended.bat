@@ -29,7 +29,7 @@ REM ============================================================================
 REM Step 1: Pull from GitHub
 REM ============================================================================
 echo [1/7] Pulling from GitHub...
-cd C:\Users\aya.alaswad\remote\MyReasearch
+cd C:\Users\aya.alaswad\remote
 git pull origin main >> %LOGFILE% 2>&1
 echo [OK] Files updated
 echo.
@@ -85,7 +85,7 @@ REM ============================================================================
 echo [4/7] Integrating SHARP...
 
 REM Copy SHARP model
-copy /Y ..\MyReasearch\benchx_sharp_model.py models\sharp.py >> %LOGFILE% 2>&1
+copy /Y ..\benchx_sharp_model.py models\sharp.py >> %LOGFILE% 2>&1
 
 REM Create config directories
 mkdir configs\classification\siim 2>nul
@@ -94,10 +94,10 @@ mkdir configs\classification\nih 2>nul
 mkdir configs\classification\vindr 2>nul
 
 REM Copy configs
-copy /Y ..\MyReasearch\benchx_config_siim.yml configs\classification\siim\sharp.yml >> %LOGFILE% 2>&1
-copy /Y ..\MyReasearch\benchx_config_rsna.yml configs\classification\rsna\sharp.yml >> %LOGFILE% 2>&1
-copy /Y ..\MyReasearch\benchx_config_nih.yml configs\classification\nih\sharp.yml >> %LOGFILE% 2>&1
-copy /Y ..\MyReasearch\benchx_config_vindr.yml configs\classification\vindr\sharp.yml >> %LOGFILE% 2>&1
+copy /Y ..\benchx_config_siim.yml configs\classification\siim\sharp.yml >> %LOGFILE% 2>&1
+copy /Y ..\benchx_config_rsna.yml configs\classification\rsna\sharp.yml >> %LOGFILE% 2>&1
+copy /Y ..\benchx_config_nih.yml configs\classification\nih\sharp.yml >> %LOGFILE% 2>&1
+copy /Y ..\benchx_config_vindr.yml configs\classification\vindr\sharp.yml >> %LOGFILE% 2>&1
 
 REM Test SHARP imports
 python -c "from models.sharp import SHARP; print('[OK] SHARP integrated')" >> %LOGFILE% 2>&1
