@@ -4,7 +4,7 @@
 # Model
 model:
   name: sharp
-  checkpoint: D:/experiments/exp3_hardneg/p3_best.pt  # SHARP's best checkpoint (37.4% F1)
+  checkpoint: D:/experiments/exp3_full_sharp/p3_best.pt  # SHARP's best checkpoint (37.4% F1)
   backbone: vit_base  # ViT-B/16
   num_classes: 2
   freeze_backbone: false  # Fine-tune (not linear probe)

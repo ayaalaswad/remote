@@ -3,7 +3,7 @@
 
 model:
   name: sharp
-  checkpoint: D:/experiments/exp3_hardneg/p3_best.pt
+  checkpoint: D:/experiments/exp3_full_sharp/p3_best.pt
   backbone: vit_base
   num_classes: 2
   freeze_backbone: false
