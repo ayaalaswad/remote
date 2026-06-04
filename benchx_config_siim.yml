@@ -10,7 +10,7 @@ model:
 
 data:
   dataset: siim_pneumothorax
-  data_root: D:/datasets/siim-pneumothorax
+  data_root: D:/datasets/siim-pneumothorax/siim-acr-pneumothorax-segmentation
   image_size: 224
   label_fraction: 1.0
 

@@ -12,7 +12,7 @@ model:
 # Data
 data:
   dataset: rsna_pneumonia
-  data_root: D:/datasets/rsna-pneumonia  # Update this path after download
+  data_root: D:/datasets/rsna-pneumonia/rsna-pneumonia-detection-challenge
   image_size: 224
   label_fraction: 1.0  # 100% labels (change to 0.01 for 1%, 0.1 for 10%)
 
