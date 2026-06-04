@@ -19,7 +19,7 @@ if not exist "BenchX\" (
 
 REM Copy SHARP model wrapper into BenchX
 echo [1/2] Copying SHARP model wrapper...
-copy /Y benchx_sharp_model.py BenchX\models\sharp.py
+copy /Y MyReasearch\benchx_sharp_model.py BenchX\models\sharp.py
 if errorlevel 1 (
     echo [ERROR] Failed to copy SHARP model
     pause
@@ -37,10 +37,10 @@ mkdir BenchX\configs\classification\nih 2>nul
 mkdir BenchX\configs\classification\vindr 2>nul
 
 REM Copy template configs from MyReasearch
-copy /Y benchx_config_rsna.yml BenchX\configs\classification\rsna\sharp.yml 2>nul
-copy /Y benchx_config_siim.yml BenchX\configs\classification\siim\sharp.yml 2>nul
-copy /Y benchx_config_nih.yml BenchX\configs\classification\nih\sharp.yml 2>nul
-copy /Y benchx_config_vindr.yml BenchX\configs\classification\vindr\sharp.yml 2>nul
+copy /Y MyReasearch\benchx_config_rsna.yml BenchX\configs\classification\rsna\sharp.yml 2>nul
+copy /Y MyReasearch\benchx_config_siim.yml BenchX\configs\classification\siim\sharp.yml 2>nul
+copy /Y MyReasearch\benchx_config_nih.yml BenchX\configs\classification\nih\sharp.yml 2>nul
+copy /Y MyReasearch\benchx_config_vindr.yml BenchX\configs\classification\vindr\sharp.yml 2>nul
 
 echo.
 echo ========================================
