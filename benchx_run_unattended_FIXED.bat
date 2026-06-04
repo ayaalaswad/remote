@@ -73,50 +73,53 @@ echo [OK] BenchX directory exists
 echo.
 
 REM ============================================================================
-REM Step 4: Fix BenchX Requirements (No Conda)
+REM Step 4: Fix BenchX Requirements and Install ALL Dependencies
 REM ============================================================================
-echo [4/8] Fixing BenchX requirements...
+echo [4/8] Installing BenchX dependencies...
 cd %BENCHX%
 
-REM Create fixed requirements
+REM Fix the broken transformers version in their requirements.txt
 (
 echo torch^>=2.0.0
 echo torchvision^>=0.15.0
 echo transformers^>=4.30.0
 echo timm
-echo albumentations
 echo opencv-python
-echo pandas
-echo numpy
 echo scipy
 echo scikit-learn
+echo scikit-image
+echo pytorch-lightning
+echo albumentations
+echo torch-optimizer
 echo tqdm
-echo tensorboard
-echo pillow
-echo matplotlib
-echo pyyaml
+echo pandas
+echo omegaconf
+echo einops
+echo ml-collections
+echo ftfy
+echo numpy==1.26.4
+echo yacs
+echo sacred
+echo wget
+echo pydicom
+echo SimpleITK
+echo monai
 ) > requirements_fixed.txt
 
-echo [OK] Requirements fixed
-echo.
-
-REM ============================================================================
-REM Step 5: Install Missing Packages (PyTorch already installed)
-REM ============================================================================
-echo [5/8] Installing missing packages...
-pip install transformers timm albumentations scikit-learn einops pydicom SimpleITK monai ml-collections -q >> %LOGFILE% 2>&1
+echo Installing all packages from fixed requirements...
+pip install -r requirements_fixed.txt -q >> %LOGFILE% 2>&1
 
 if errorlevel 1 (
-    echo [WARNING] Package installation had issues (continuing anyway) >> %LOGFILE%
+    echo [WARNING] Some packages had issues (continuing anyway) >> %LOGFILE%
 )
 
-echo [OK] Packages installed
+echo [OK] All packages installed
 echo.
 
 REM ============================================================================
-REM Step 6: Integrate SHARP
+REM Step 5: Integrate SHARP
 REM ============================================================================
-echo [6/8] Integrating SHARP...
+echo [5/7] Integrating SHARP...
 
 REM Create models directory if needed
 if not exist "%BENCHX%\models" mkdir "%BENCHX%\models"
@@ -181,9 +184,9 @@ echo [OK] SHARP integrated
 echo.
 
 REM ============================================================================
-REM Step 7: Check Which Datasets Exist
+REM Step 6: Check Which Datasets Exist
 REM ============================================================================
-echo [7/8] Checking datasets...
+echo [6/7] Checking datasets...
 
 set RUN_SIIM=0
 set RUN_RSNA=0
@@ -227,9 +230,9 @@ echo Found %TOTAL% dataset(s)
 echo.
 
 REM ============================================================================
-REM Step 8: Create Output Directories
+REM Step 7: Create Output Directories
 REM ============================================================================
-echo [8/8] Creating output directories...
+echo [7/7] Creating output directories...
 if not exist "D:\experiments\benchx_results" mkdir "D:\experiments\benchx_results"
 if not exist "D:\experiments\benchx_results\siim_sharp" mkdir "D:\experiments\benchx_results\siim_sharp"
 if not exist "D:\experiments\benchx_results\rsna_sharp" mkdir "D:\experiments\benchx_results\rsna_sharp"
@@ -239,7 +242,7 @@ echo [OK] Directories ready
 echo.
 
 REM ============================================================================
-REM Step 9: Run Training on All Available Datasets
+REM Step 8: Run Training on All Available Datasets
 REM ============================================================================
 echo ========================================
 echo   Starting Training
