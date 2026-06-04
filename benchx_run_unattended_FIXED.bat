@@ -104,7 +104,7 @@ REM ============================================================================
 REM Step 5: Install Missing Packages (PyTorch already installed)
 REM ============================================================================
 echo [5/8] Installing missing packages...
-pip install transformers timm albumentations scikit-learn einops pydicom SimpleITK monai -q >> %LOGFILE% 2>&1
+pip install transformers timm albumentations scikit-learn einops pydicom SimpleITK monai ml-collections -q >> %LOGFILE% 2>&1
 
 if errorlevel 1 (
     echo [WARNING] Package installation had issues (continuing anyway) >> %LOGFILE%
