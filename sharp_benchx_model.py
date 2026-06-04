@@ -58,7 +58,7 @@ class SHARPForBenchX(nn.Module):
         # ── 1. load raw checkpoint ────────────────────────────────────────
         raw = torch.load(checkpoint_path, map_location="cpu")
         if isinstance(raw, dict):
-            state_dict = raw.get("state_dict", raw.get("model", raw))
+            state_dict = raw.get("model_state_dict", raw.get("state_dict", raw.get("model", raw)))
         else:
             raise ValueError("Unexpected checkpoint format.")
 
