@@ -15,7 +15,7 @@ echo ========================================
 echo.
 
 set LOGFILE=D:\experiments\benchx_unattended.log
-set MYRESEARCH=C:\Users\aya.alaswad\remote\MyReasearch
+set MYRESEARCH=C:\Users\aya.alaswad\remote
 set BENCHX=C:\Users\aya.alaswad\remote\BenchX
 
 echo Starting BenchX automation at %date% %time% > %LOGFILE%
