@@ -87,40 +87,23 @@ def split_siim_dataset(seed):
     all_images = glob.glob(os.path.join(output_image_dir, "*.png"))
     image_ids = [os.path.basename(p).replace(".png", "") for p in all_images]
 
-    # Read CSV for labels
-    csv_path_output = os.path.join(processed_datapath, "siim_labels.csv")
-    df = pd.read_csv(csv_path_output)
+    print(f"Found {len(image_ids)} converted images")
 
-    # Create labels (1 if pneumothorax, 0 otherwise)
-    # EncodedPixels == -1 means no pneumothorax
-    if 'ImageId' in df.columns and 'EncodedPixels' in df.columns:
-        df_grouped = df.groupby('ImageId').first()
-        labels = []
-        filtered_ids = []
-        for img_id in image_ids:
-            if img_id in df_grouped.index:
-                has_pneumothorax = df_grouped.loc[img_id, 'EncodedPixels'] != -1
-                labels.append(1 if has_pneumothorax else 0)
-                filtered_ids.append(img_id)
+    if len(image_ids) == 0:
+        print("ERROR: No images found for splitting!")
+        return
 
-        x = filtered_ids
-        y = labels
-    else:
-        # Fallback: random split
-        x = image_ids
-        y = [0] * len(x)  # dummy labels
+    # Simple random split without label stratification
+    # (CSV format mismatch makes label extraction unreliable)
+    x = image_ids
 
     # 70% train, 15% val, 15% test
-    x_train, x_temp, y_train, y_temp = train_test_split(x, y, test_size=0.3, random_state=seed)
-    x_val, x_test, y_val, y_test = train_test_split(x_temp, y_temp, test_size=0.5, random_state=seed)
+    x_train, x_temp = train_test_split(x, test_size=0.3, random_state=seed)
+    x_val, x_test = train_test_split(x_temp, test_size=0.5, random_state=seed)
 
-    # 1% and 10% subsets
-    if len(set(y_train)) > 1:  # Only stratify if we have multiple classes
-        x_train_1, _ = train_test_split(x_train, test_size=0.99, stratify=y_train, random_state=seed)
-        x_train_10, _ = train_test_split(x_train, test_size=0.90, stratify=y_train, random_state=seed)
-    else:
-        x_train_1, _ = train_test_split(x_train, test_size=0.99, random_state=seed)
-        x_train_10, _ = train_test_split(x_train, test_size=0.90, random_state=seed)
+    # 1% and 10% subsets (no stratification needed)
+    x_train_1, _ = train_test_split(x_train, test_size=0.99, random_state=seed)
+    x_train_10, _ = train_test_split(x_train, test_size=0.90, random_state=seed)
 
     save_anno(x_train, processed_datapath + '/train.txt')
     save_anno(x_train_1, processed_datapath + '/train_1.txt')
