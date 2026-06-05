@@ -66,8 +66,15 @@ def preprocess_rsna_data():
         final_image.save(os.path.join(output_image_dir, image_id + ".png"), 'PNG')
 
     output_csvpath = os.path.join(processed_datapath, "rsna_labels.csv")
+
+    # Add new_filename column for BenchX compatibility
+    raw_csv['new_filename'] = raw_csv['patientId'].astype(str) + '.png'
+
+    # Ensure Target column exists (binary pneumonia label: 0 or 1)
+    # This is already present in the raw CSV as 'Target'
+
     raw_csv.to_csv(output_csvpath, index=False)
-    print(f"Saved rsna_labels.csv")
+    print(f"Saved rsna_labels.csv with BenchX-compatible format")
 
 def generate_rsna_masks():
     print("Generating masks...")

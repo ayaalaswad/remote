@@ -63,14 +63,26 @@ def preprocess_siim_data():
 
     print(f"Converted {len(all_dcm_files)} images")
 
-    # Copy the CSV
+    # Create BenchX-compatible CSV
     output_csvpath = os.path.join(processed_datapath, "siim_labels.csv")
     df = pd.read_csv(csv_path)
-    # Add new_filename column for BenchX compatibility
+
+    # Add new_filename column
     if 'ImageId' in df.columns:
         df['new_filename'] = df['ImageId'].astype(str) + '.png'
+
+    # Add has_pneumo column (binary label)
+    # If EncodedPixels is not -1, there's pneumothorax
+    if ' EncodedPixels' in df.columns:
+        df['has_pneumo'] = (df[' EncodedPixels'] != ' -1').astype(int)
+    elif 'EncodedPixels' in df.columns:
+        df['has_pneumo'] = (df['EncodedPixels'] != '-1').astype(int)
+    else:
+        # Default to 0 if we can't determine
+        df['has_pneumo'] = 0
+
     df.to_csv(output_csvpath, index=False)
-    print(f"Saved siim_labels.csv")
+    print(f"Saved siim_labels.csv with has_pneumo column")
 
 def save_anno(img_list, file_path, remove_suffix=False):
     if remove_suffix:

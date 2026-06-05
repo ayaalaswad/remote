@@ -9,9 +9,10 @@ echo ========================================
 echo.
 echo This will:
 echo   1. Setup configs
-echo   2. Train SHARP on SIIM (30-45 min)
-echo   3. Preprocess RSNA dataset (10-15 min)
-echo   4. Train SHARP on RSNA (1-1.5 hours)
+echo   2. Fix SIIM CSV (add has_pneumo column)
+echo   3. Train SHARP on SIIM (30-45 min)
+echo   4. Preprocess RSNA dataset (10-15 min)
+echo   5. Train SHARP on RSNA (1-1.5 hours)
 echo.
 echo Total time: ~2 hours
 echo ========================================
@@ -40,9 +41,28 @@ echo [OK] Configs ready
 echo.
 
 REM ============================================================================
-REM Step 1: SIIM Training
+REM Step 1: Fix SIIM CSV (add has_pneumo column)
 REM ============================================================================
-echo [1/4] Training SHARP on SIIM dataset...
+echo [1/5] Fixing SIIM CSV to add has_pneumo column...
+echo.
+
+cd C:\Users\aya.alaswad\remote
+
+python fix_siim_csv.py
+
+if errorlevel 1 (
+    echo [ERROR] SIIM CSV fix failed!
+    pause
+    exit /b 1
+)
+
+echo [OK] SIIM CSV fixed
+echo.
+
+REM ============================================================================
+REM Step 2: SIIM Training
+REM ============================================================================
+echo [2/5] Training SHARP on SIIM dataset...
 echo   - Using preprocessed data (3,205 images)
 echo   - Training on train_1.txt (1%% subset)
 echo   - Expected time: 30-45 minutes
@@ -64,9 +84,9 @@ echo [OK] SIIM training complete!
 echo.
 
 REM ============================================================================
-REM Step 2: RSNA Preprocessing
+REM Step 3: RSNA Preprocessing
 REM ============================================================================
-echo [2/4] Preprocessing RSNA dataset...
+echo [3/5] Preprocessing RSNA dataset...
 echo   - Converting ~30k DICOM to PNG (512x512)
 echo   - Generating pneumonia masks
 echo   - Creating train/val/test splits
@@ -88,9 +108,9 @@ echo [OK] RSNA preprocessing complete!
 echo.
 
 REM ============================================================================
-REM Step 3: RSNA Training
+REM Step 4: RSNA Training
 REM ============================================================================
-echo [3/4] Training SHARP on RSNA dataset...
+echo [4/5] Training SHARP on RSNA dataset...
 echo   - Using preprocessed data (~30k images)
 echo   - Training on train_1.txt (1%% subset)
 echo   - Expected time: 1-1.5 hours
@@ -112,9 +132,9 @@ echo [OK] RSNA training complete!
 echo.
 
 REM ============================================================================
-REM Step 4: Extract Results
+REM Step 5: Extract Results
 REM ============================================================================
-echo [4/4] Extracting results...
+echo [5/5] Extracting results...
 echo ========================================
 echo   Training Complete! Results Summary
 echo ========================================
