@@ -4,8 +4,9 @@ use_amp: True
 seed: 42
 
 dataset:
-  proto: SIIM_Dataset
-  data_path: C:/Users/aya.alaswad/remote/BenchX/datasets/SIIM
+  proto: SIIM_Pneumothorax_Dataset
+  data_path: datasets/SIIM
+  csvpath: datasets/SIIM/siim_labels.csv
   split: "train_1"
   num_workers: 4
 

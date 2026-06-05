@@ -4,8 +4,9 @@ use_amp: True
 seed: 42
 
 dataset:
-  proto: RSNA_Dataset
-  data_path: C:/Users/aya.alaswad/remote/BenchX/datasets/RSNA
+  proto: RSNA_Pneumonia_Dataset
+  data_path: datasets/RSNA
+  csvpath: datasets/RSNA/rsna_labels.csv
   split: "train_1"
   num_workers: 4
 
