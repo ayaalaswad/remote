@@ -22,7 +22,8 @@ model:
 
   cnn:
     output_layer: avgpool
-    pretrained: D:/experiments/exp3_full_sharp/p3_best.pt
+    pretrained: true  # Standard ImageNet pretrained (test first)
+    # pretrained: D:/experiments/exp3_full_sharp/p3_best.pt  # SHARP checkpoint (need custom loader)
     freeze: False
 
   classifier:
