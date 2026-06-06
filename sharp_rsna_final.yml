@@ -1,5 +1,5 @@
 includes:
-  - configs/_base_/models/convirt.yml
+  - configs/_base_/models/mgca_vit.yml
 
 name: SHARP
 ckpt_dir: experiments/classification/rsna/
@@ -22,8 +22,7 @@ model:
 
   cnn:
     output_layer: avgpool
-    pretrained: true  # Standard ImageNet pretrained (test first)
-    # pretrained: D:/experiments/exp3_full_sharp/p3_best.pt  # SHARP checkpoint (need custom loader)
+    pretrained: D:/experiments/exp3_full_sharp/p3_best.pt
     freeze: False
 
   classifier:
