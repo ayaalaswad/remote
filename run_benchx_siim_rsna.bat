@@ -41,14 +41,14 @@ echo [OK] Configs ready
 echo.
 
 REM ============================================================================
-REM Step 1: Fix SIIM CSV (add has_pneumo column)
+REM Step 1: Rebuild SIIM CSV (match actual image filenames)
 REM ============================================================================
-echo [1/5] Fixing SIIM CSV to add has_pneumo column...
+echo [1/5] Rebuilding SIIM CSV to match actual image files...
 echo.
 
 cd C:\Users\aya.alaswad\remote
 
-python fix_siim_csv.py
+python rebuild_siim_csv.py
 
 if errorlevel 1 (
     echo [ERROR] SIIM CSV fix failed!
