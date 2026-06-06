@@ -7,11 +7,12 @@ dataset:
   proto: RSNA_Pneumonia_Dataset
   data_path: datasets/RSNA
   csvpath: datasets/RSNA/rsna_labels.csv
+  extension: ".png"
   split: "train_1"
   num_workers: 4
 
 transforms:
-  type: NIHTransforms
+  type: RSNATransforms
 
 model:
   proto: ImageClassifier
