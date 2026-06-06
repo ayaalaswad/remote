@@ -18,9 +18,10 @@ git pull origin main
 echo.
 
 REM ============================================================================
-REM Step 2: Preprocess RSNA dataset
+REM Step 2: Preprocess RSNA dataset (using BenchX's original logic)
 REM ============================================================================
 echo [2/4] Preprocessing RSNA dataset...
+echo   - Using BenchX's preprocessing logic with correct paths
 echo   - Converting ~30k DICOM to PNG (512x512)
 echo   - Generating pneumonia masks
 echo   - Creating train/val/test splits
@@ -28,6 +29,7 @@ echo   - Expected time: 10-15 minutes
 echo.
 
 python preprocess_rsna_adapted.py
+REM Note: preprocess_rsna_adapted.py is BenchX's original script with paths updated for your system
 
 if errorlevel 1 (
     echo [ERROR] RSNA preprocessing failed!
