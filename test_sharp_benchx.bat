@@ -53,11 +53,14 @@ echo.
 
 cd BenchX
 
-python bin/train.py configs/classification/SIIM/sharp.yml 2>&1 | tee ..\benchx_test_output.txt
+python bin/train.py configs/classification/SIIM/sharp.yml > ..\benchx_test_output.txt 2>&1
 
 set TRAIN_EXIT_CODE=%ERRORLEVEL%
 
 cd ..
+
+REM Show output in real-time
+type benchx_test_output.txt
 
 REM ============================================================================
 REM Step 5: Analyze results
