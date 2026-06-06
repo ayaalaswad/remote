@@ -19,19 +19,14 @@ echo Pulling latest code...
 git pull origin main
 echo.
 
-REM Preprocess if needed
-if not exist "BenchX\datasets\RSNA\rsna_labels.csv" (
-    echo Preprocessing RSNA dataset...
-    python run_benchx_rsna_preprocess.py
-    if errorlevel 1 (
-        echo [ERROR] Preprocessing failed!
-        pause
-        exit /b 1
-    )
-    echo [OK] Preprocessing complete
-) else (
-    echo [OK] RSNA already preprocessed - skipping
+REM Verify dataset exists
+if not exist "BenchX\datasets\RSNA" (
+    echo [ERROR] BenchX\datasets\RSNA not found!
+    echo Please preprocess RSNA dataset first.
+    pause
+    exit /b 1
 )
+echo [OK] RSNA dataset found
 echo.
 
 REM Copy config and train

@@ -26,27 +26,18 @@ git pull origin main
 echo.
 
 REM ============================================================================
-REM Step 1: Preprocess RSNA dataset (if not already done)
+REM Step 1: Verify RSNA dataset exists
 REM ============================================================================
-echo [1/4] Checking RSNA preprocessing...
+echo [1/4] Verifying RSNA dataset...
 
-if not exist "BenchX\datasets\RSNA\rsna_labels.csv" (
-    echo [1/4] Preprocessing RSNA dataset...
-    echo   - Converting ~30k DICOM to PNG (512x512)
-    echo   - Expected time: 10-15 minutes
-    echo.
-    python run_benchx_rsna_preprocess.py
-
-    if errorlevel 1 (
-        echo [ERROR] RSNA preprocessing failed!
-        pause
-        exit /b 1
-    )
-    echo.
-    echo [OK] RSNA preprocessing complete!
-) else (
-    echo [OK] RSNA already preprocessed - skipping
+if not exist "BenchX\datasets\RSNA" (
+    echo [ERROR] BenchX\datasets\RSNA directory not found!
+    echo Please preprocess RSNA dataset manually first.
+    pause
+    exit /b 1
 )
+
+echo [OK] RSNA dataset found
 echo.
 
 REM ============================================================================
