@@ -12,7 +12,7 @@ dataset:
   csvpath: datasets/RSNA/rsna_labels.csv
   extension: ".png"
   split: "train_1"
-  num_workers: 4
+  num_workers: 0
 
 transforms:
   type: RSNATransforms
