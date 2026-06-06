@@ -1,6 +1,9 @@
 # SHARP on SIIM - Simple Direct Load
 # Just point to SHARP checkpoint and see if it works
 
+includes:
+  - configs/_base_/models/mgca_vit.yml  # Use ViT base (not ResNet)
+
 name: SHARP
 ckpt_dir: experiments/classification/siim/
 use_amp: True
@@ -21,9 +24,11 @@ model:
   proto: ImageClassifier
 
   cnn:
-    proto: vit_base_patch16_224  # ViT-B/16 (SHARP's architecture)
-    output_layer: avgpool
-    pretrained: D:/experiments/exp3_full_sharp/p3_best.pt  # SHARP checkpoint - try loading directly
+    pretrained: D:/experiments/exp3_full_sharp/p3_best.pt  # SHARP checkpoint
+    prefix: image_encoder.vit.  # Strip SHARP's prefix to get raw ViT weights
+    num_classes: 0  # Disable encoder's classifier
+    global_pool: token  # Use CLS token
+    permute: no_permute
     freeze: False
 
   classifier:
