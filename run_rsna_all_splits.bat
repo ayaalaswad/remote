@@ -30,9 +30,7 @@ REM Step 1: Preprocess RSNA dataset (if not already done)
 REM ============================================================================
 echo [1/4] Checking RSNA preprocessing...
 
-if exist "BenchX\datasets\RSNA\rsna_labels.csv" (
-    echo [OK] RSNA already preprocessed
-) else (
+if not exist "BenchX\datasets\RSNA\rsna_labels.csv" (
     echo [1/4] Preprocessing RSNA dataset...
     echo   - Converting ~30k DICOM to PNG (512x512)
     echo   - Expected time: 10-15 minutes
@@ -44,7 +42,10 @@ if exist "BenchX\datasets\RSNA\rsna_labels.csv" (
         pause
         exit /b 1
     )
+    echo.
     echo [OK] RSNA preprocessing complete!
+) else (
+    echo [OK] RSNA already preprocessed - skipping
 )
 echo.
 
