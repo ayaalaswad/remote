@@ -45,8 +45,10 @@ REM ============================================================================
 REM Step 3: Copy config to BenchX
 REM ============================================================================
 echo [3/4] Copying RSNA config to BenchX...
+echo   - Using BenchX-standardized protocol (matches MGCA exactly)
+echo   - Only difference: SHARP checkpoint instead of MGCA
 
-copy sharp_rsna_final.yml BenchX\configs\classification\RSNA\sharp.yml /Y
+copy sharp_rsna_benchx.yml BenchX\configs\classification\RSNA\sharp.yml /Y
 
 if errorlevel 1 (
     echo [ERROR] Config copy failed!
