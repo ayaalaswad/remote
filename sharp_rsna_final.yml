@@ -21,8 +21,10 @@ model:
   proto: ImageClassifier
 
   cnn:
-    output_layer: avgpool
     pretrained: D:/experiments/exp3_full_sharp/p3_best_timm.pt
+    num_classes: 0
+    global_pool: token
+    permute: no_permute
     freeze: False
 
   classifier:
