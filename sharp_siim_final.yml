@@ -22,7 +22,7 @@ model:
 
   cnn:
     output_layer: avgpool
-    pretrained: D:/experiments/exp3_full_sharp/p3_best.pt
+    pretrained: D:/experiments/exp3_full_sharp/p3_best_timm.pt
     freeze: False
 
   classifier:
