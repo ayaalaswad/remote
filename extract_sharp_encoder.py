@@ -63,9 +63,18 @@ def extract_sharp_vit_encoder(sharp_checkpoint_path, output_path):
     print(f"Excluded {len(projection_keys)} projection head parameters")
     print()
 
-    # Save extracted weights
-    output_dict = {
+    # Save extracted weights in multiple formats for compatibility
+
+    # Format 1: BenchX compatible (just state_dict)
+    benchx_format = {
+        'state_dict': vit_state_dict,
+        'arch': 'vit_base_patch16_224',
+    }
+
+    # Format 2: Full info (for reference)
+    full_format = {
         'model': vit_state_dict,
+        'state_dict': vit_state_dict,  # Some loaders expect 'state_dict' key
         'source': 'SHARP',
         'architecture': 'ViT-B/16',
         'embedding_dim': 768,  # ViT-B/16 output before projection
@@ -74,7 +83,12 @@ def extract_sharp_vit_encoder(sharp_checkpoint_path, output_path):
     }
 
     print(f"Saving extracted encoder to: {output_path}")
-    torch.save(output_dict, output_path)
+    torch.save(full_format, output_path)
+
+    # Also save BenchX-compatible version
+    benchx_path = output_path.replace('.pt', '_benchx.pt')
+    torch.save(benchx_format, benchx_path)
+    print(f"Saving BenchX-compatible version to: {benchx_path}")
 
     # Verify saved file
     file_size = os.path.getsize(output_path) / (1024 * 1024)

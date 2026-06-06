@@ -1,0 +1,61 @@
+# SHARP Encoder on SIIM - DIRECT LOADING
+# This config loads SHARP's extracted ViT encoder directly
+
+name: SHARP
+ckpt_dir: experiments/classification/siim/
+use_amp: True
+seed: 42
+
+dataset:
+  proto: SIIM_Pneumothorax_Dataset
+  data_path: datasets/SIIM
+  csvpath: datasets/SIIM/siim_labels.csv
+  extension: ".png"
+  split: "train_1"
+  num_workers: 0  # Disable multiprocessing (Windows pickle issue)
+
+transforms:
+  type: NIHTransforms
+
+model:
+  proto: ImageClassifier
+
+  cnn:
+    proto: vit_base_patch16_224  # ViT-B/16 (same as SHARP)
+    output_layer: avgpool
+    pretrained: D:/experiments/sharp_vit_encoder_benchx.pt  # SHARP's extracted encoder
+    freeze: False
+
+  classifier:
+    proto: Classifier
+    num_classes: 2
+    use_fc_norm: True
+    trunc_init: True
+    dropout: 0.
+
+  loss:
+    proto: BCEWithLogitsLoss
+
+trainer:
+  optimizer: AdamW
+  optim_params:
+    lr: 1e-4
+    eps: 1e-08
+    optim_groups: ve_only
+    lr_multiplier_ve: 0.1
+  batch_size: 32
+  clip_grad_norm: 1.0
+  lr_decay: WarmupCosineScheduler
+  lr_decay_params:
+    warmup_steps: 50
+    t_total: 3000
+  epochs: 30
+  early_stop: 10
+  eval_start: 5
+  eval_interval: 2
+  early_stop_metric: binary_auroc
+
+validator:
+  batch_size: 128
+  metrics: [binary_accuracy, binary_auroc]
+  splits: [val]
