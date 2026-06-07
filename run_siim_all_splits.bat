@@ -26,17 +26,18 @@ git pull origin main
 echo.
 
 REM ============================================================================
-REM Step 1: Preprocess SIIM dataset
+REM Step 1: Preprocess SIIM dataset (FIXED VERSION)
 REM ============================================================================
 echo [1/4] Preprocessing SIIM dataset...
 
 if not exist "BenchX\datasets\SIIM\siim_labels.csv" (
     echo   - Processing Kaggle SIIM dataset
+    echo   - Reading labels from CSV (FIXED)
     echo   - Resizing images and masks to 512x512
-    echo   - Creating train/val/test splits
+    echo   - Creating stratified train/val/test splits
     echo   - Expected time: 10-15 minutes
     echo.
-    python preprocess_siim_benchx.py
+    python preprocess_siim_fixed.py
 
     if errorlevel 1 (
         echo [ERROR] SIIM preprocessing failed!
