@@ -1,0 +1,23 @@
+{
+  "1pct": {
+    "f1": 24.242424242424246,
+    "total_samples": 4003,
+    "positive_samples": 902,
+    "negative_samples": 3101,
+    "correct_predictions": 3003
+  },
+  "10pct": {
+    "f1": 43.07320024198427,
+    "total_samples": 4003,
+    "positive_samples": 902,
+    "negative_samples": 3101,
+    "correct_predictions": 3062
+  },
+  "100pct": {
+    "f1": 45.87280108254398,
+    "total_samples": 4003,
+    "positive_samples": 902,
+    "negative_samples": 3101,
+    "correct_predictions": 3203
+  }
+}
