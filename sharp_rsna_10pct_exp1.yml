@@ -1,0 +1,63 @@
+includes:
+  - configs/_base_/models/mgca_vit.yml
+
+name: SHARP_EXP1_10pct
+ckpt_dir: experiments/classification/rsna/SHARP_EXP1_10pct/
+use_amp: True
+seed: 42
+
+dataset:
+  proto: RSNA_Pneumonia_Dataset
+  data_path: datasets/RSNA
+  csvpath: datasets/RSNA/rsna_labels.csv
+  extension: ".png"
+  split: "train_10"
+  num_workers: 0
+
+transforms:
+  type: RSNATransforms
+
+model:
+  proto: ImageClassifier
+
+  cnn:
+    pretrained: D:/experiments/exp1_baseline/p3_best.pt
+    num_classes: 0
+    global_pool: token
+    permute: no_permute
+    freeze: False
+
+  classifier:
+    proto: Classifier
+    num_classes: 2
+    use_fc_norm: True
+    trunc_init: True
+    dropout: 0.
+
+  loss:
+    proto: CrossEntropyLoss
+
+# EXACT MGCA TRAINING PROTOCOL - DO NOT MODIFY
+trainer:
+  optimizer: SGD
+  optim_params:
+    lr: 1e-2
+    momentum: 0.9
+    optim_groups: ve_only
+    lr_multiplier_ve: 0.1
+  batch_size: 64
+  clip_grad_norm: 1.0
+  lr_decay: WarmupCosineScheduler
+  lr_decay_params:
+    warmup_steps: 50
+    t_total: 3000
+  epochs: 30
+  early_stop: 10
+  eval_start: 5
+  eval_interval: 2
+  early_stop_metric: multiclass_auroc
+
+validator:
+  batch_size: 128
+  metrics: [multiclass_accuracy, multiclass_auroc]
+  splits: [val]
