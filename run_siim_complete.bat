@@ -8,9 +8,9 @@ REM Activate conda environment
 call conda activate benchx
 cd C:\Users\aya.alaswad\remote
 
-echo Step 1: Running SIIM preprocessing...
+echo Step 1: Running SIIM preprocessing (CSV-based labels only)...
 echo.
-python preprocess_siim_simple.py
+python preprocess_siim_csv_only.py
 if errorlevel 1 (
     echo ERROR: SIIM preprocessing failed!
     pause
