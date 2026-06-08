@@ -40,16 +40,22 @@ for name, path in experiments:
                 best_r1 = max(i2t_r1_scores)
                 final_r1 = i2t_r1_scores[-1]
                 best_epoch = i2t_r1_scores.index(best_r1) + 1
-                print(f"  ✓ Best i2t R@1: {best_r1:.2f}% (epoch {best_epoch})")
-                print(f"  ✓ Final i2t R@1: {final_r1:.2f}% (final epoch)")
+                
+                # Multiply by 100 to convert from fraction to percentage
+                best_r1_pct = best_r1 * 100
+                final_r1_pct = final_r1 * 100
+                
+                print(f"  ✓ Best i2t R@1: {best_r1_pct:.2f}% (epoch {best_epoch})")
+                print(f"  ✓ Final i2t R@1: {final_r1_pct:.2f}% (final epoch)")
+                print(f"    Raw value: {best_r1:.6f}")
                 
                 # Show if this matches our target
-                if abs(best_r1 - 6.61) < 0.1:
-                    print(f"  >>> MATCH: Exp #1 Baseline (6.61%)")
-                elif abs(best_r1 - 6.21) < 0.1:
-                    print(f"  >>> MATCH: Exp #3 Full SHARP (6.21%)")
-                elif abs(best_r1 - 8.77) < 0.1:
-                    print(f"  >>> MATCH: Exp #4 v2a Best (8.77%) ⭐")
+                if abs(best_r1_pct - 6.61) < 0.5:
+                    print(f"  >>> MATCH: Exp #1 Baseline (6.61%) ⭐")
+                elif abs(best_r1_pct - 6.21) < 0.5:
+                    print(f"  >>> MATCH: Exp #3 Full SHARP (6.21%) ⭐")
+                elif abs(best_r1_pct - 8.77) < 0.5:
+                    print(f"  >>> MATCH: Exp #4 v2a Best (8.77%) ⭐⭐⭐")
             else:
                 print(f"  ⚠️ No i2t_r1 found in records")
     
@@ -63,3 +69,4 @@ print("\nTarget R@1 scores:")
 print("  Exp #1 Baseline: 6.61%")
 print("  Exp #3 Full SHARP: 6.21%")
 print("  Exp #4 v2a (Best): 8.77%")
+print("\nLooking for which directory has 8.77% for checkpoint conversion...")
