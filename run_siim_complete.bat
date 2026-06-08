@@ -24,27 +24,28 @@ echo ============================================================
 echo.
 
 REM Copy configs from local repo
-copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_1pct.yml BenchX\configs\classification\sharp_siim_1pct.yml /Y
-copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_10pct.yml BenchX\configs\classification\sharp_siim_10pct.yml /Y
-copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_100pct.yml BenchX\configs\classification\sharp_siim_100pct.yml /Y
+if not exist "BenchX\configs\classification\SIIM" mkdir "BenchX\configs\classification\SIIM"
+copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_1pct.yml BenchX\configs\classification\SIIM\sharp_siim_1pct.yml /Y
+copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_10pct.yml BenchX\configs\classification\SIIM\sharp_siim_10pct.yml /Y
+copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_100pct.yml BenchX\configs\classification\SIIM\sharp_siim_100pct.yml /Y
 
 echo Step 2: Training SIIM 1%%...
 cd BenchX
-python run.py --config configs/classification/sharp_siim_1pct.yml --train
+python bin/train.py configs/classification/SIIM/sharp_siim_1pct.yml
 if errorlevel 1 (
     echo WARNING: SIIM 1%% training failed!
 )
 
 echo.
 echo Step 3: Training SIIM 10%%...
-python run.py --config configs/classification/sharp_siim_10pct.yml --train
+python bin/train.py configs/classification/SIIM/sharp_siim_10pct.yml
 if errorlevel 1 (
     echo WARNING: SIIM 10%% training failed!
 )
 
 echo.
 echo Step 4: Training SIIM 100%%...
-python run.py --config configs/classification/sharp_siim_100pct.yml --train
+python bin/train.py configs/classification/SIIM/sharp_siim_100pct.yml
 if errorlevel 1 (
     echo WARNING: SIIM 100%% training failed!
 )
