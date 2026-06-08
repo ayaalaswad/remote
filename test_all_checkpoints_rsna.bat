@@ -36,9 +36,29 @@ if errorlevel 1 (
 )
 
 REM ============================================================================
-REM Step 1: Test Exp #1 Baseline (Less report gen fine-tuning)
+REM Step 1: Test Exp #3 Full SHARP (Priority - needed first!)
 REM ============================================================================
-echo [1/4] Testing Exp #1 Baseline checkpoint...
+echo [1/4] Testing Exp #3 Full SHARP checkpoint (current)...
+echo   - R@1: 6.21%% (Stage 1)
+echo   - F1: 37.4%% (Stage 2 - heavily optimized for report gen)
+echo   - Expected F1: 43.1 (from previous run)
+echo   - RUNNING FIRST (user priority)
+echo.
+
+copy sharp_rsna_10pct.yml BenchX\configs\classification\RSNA\sharp.yml /Y
+cd BenchX
+python bin/train.py configs/classification/RSNA/sharp.yml
+
+if errorlevel 1 (
+    echo [WARNING] Exp #3 training failed - continuing...
+)
+cd ..
+echo.
+
+REM ============================================================================
+REM Step 2: Test Exp #1 Baseline (Less report gen fine-tuning)
+REM ============================================================================
+echo [2/4] Testing Exp #1 Baseline checkpoint...
 echo   - R@1: 6.61%% (Stage 1)
 echo   - F1: 31.2%% (Stage 2 - less degradation)
 echo   - Expected: Better than Exp #3 for classification
@@ -50,25 +70,6 @@ python bin/train.py configs/classification/RSNA/sharp.yml
 
 if errorlevel 1 (
     echo [WARNING] Exp #1 training failed - continuing...
-)
-cd ..
-echo.
-
-REM ============================================================================
-REM Step 2: Test Exp #3 Full SHARP (Current baseline)
-REM ============================================================================
-echo [2/4] Testing Exp #3 Full SHARP checkpoint (current)...
-echo   - R@1: 6.21%% (Stage 1)
-echo   - F1: 37.4%% (Stage 2 - heavily optimized for report gen)
-echo   - Expected F1: 43.1 (from previous run)
-echo.
-
-copy sharp_rsna_10pct.yml BenchX\configs\classification\RSNA\sharp.yml /Y
-cd BenchX
-python bin/train.py configs/classification/RSNA/sharp.yml
-
-if errorlevel 1 (
-    echo [WARNING] Exp #3 training failed - continuing...
 )
 cd ..
 echo.
@@ -100,10 +101,10 @@ echo ========================================
 echo   All Training Complete!
 echo ========================================
 echo.
-echo Results saved in:
-echo   BenchX\experiments\classification\rsna\SHARP_EXP1_10pct\
-echo   BenchX\experiments\classification\rsna\SHARP_10pct\
-echo   BenchX\experiments\classification\rsna\SHARP_EXP4v2a_10pct\
+echo Results saved in (order run):
+echo   1. BenchX\experiments\classification\rsna\SHARP_10pct\          (Exp #3 - ran first)
+echo   2. BenchX\experiments\classification\rsna\SHARP_EXP1_10pct\     (Exp #1)
+echo   3. BenchX\experiments\classification\rsna\SHARP_EXP4v2a_10pct\  (Exp #4 v2a)
 echo.
 echo Next: Compare F1 scores to see which checkpoint performs best
 echo.
