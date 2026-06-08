@@ -7,7 +7,15 @@ import os
 def convert_hf_to_timm(source_path, target_path):
     """Convert HuggingFace ViT checkpoint to timm format"""
     print(f"Loading checkpoint: {source_path}")
-    state_dict = torch.load(source_path, map_location='cpu')
+    checkpoint = torch.load(source_path, map_location='cpu')
+
+    # Extract model state dict from checkpoint
+    if 'model_state_dict' in checkpoint:
+        state_dict = checkpoint['model_state_dict']
+        print(f"  ✓ Extracted model_state_dict")
+    else:
+        state_dict = checkpoint
+        print(f"  ⚠ Using checkpoint directly (no model_state_dict key)")
 
     new_state_dict = {}
 
