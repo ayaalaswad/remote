@@ -30,32 +30,28 @@ for name, path in experiments:
         
         # History is a list of epoch records
         if isinstance(history, list):
-            # Find records with val_r1
-            val_r1_scores = []
+            # Find records with i2t_r1 (image-to-text R@1)
+            i2t_r1_scores = []
             for record in history:
-                if isinstance(record, dict) and 'val_r1' in record:
-                    val_r1_scores.append(record['val_r1'])
+                if isinstance(record, dict) and 'i2t_r1' in record:
+                    i2t_r1_scores.append(record['i2t_r1'])
             
-            if val_r1_scores:
-                best_r1 = max(val_r1_scores)
-                final_r1 = val_r1_scores[-1]
-                best_epoch = val_r1_scores.index(best_r1) + 1
-                print(f"  ✓ Best R@1: {best_r1:.4f}% (epoch {best_epoch})")
-                print(f"  ✓ Final R@1: {final_r1:.4f}% (epoch {len(val_r1_scores)})")
+            if i2t_r1_scores:
+                best_r1 = max(i2t_r1_scores)
+                final_r1 = i2t_r1_scores[-1]
+                best_epoch = i2t_r1_scores.index(best_r1) + 1
+                print(f"  ✓ Best i2t R@1: {best_r1:.2f}% (epoch {best_epoch})")
+                print(f"  ✓ Final i2t R@1: {final_r1:.2f}% (final epoch)")
+                
+                # Show if this matches our target
+                if abs(best_r1 - 6.61) < 0.1:
+                    print(f"  >>> MATCH: Exp #1 Baseline (6.61%)")
+                elif abs(best_r1 - 6.21) < 0.1:
+                    print(f"  >>> MATCH: Exp #3 Full SHARP (6.21%)")
+                elif abs(best_r1 - 8.77) < 0.1:
+                    print(f"  >>> MATCH: Exp #4 v2a Best (8.77%) ⭐")
             else:
-                print(f"  ⚠️ No val_r1 found in records")
-                if len(history) > 0:
-                    print(f"  Sample keys: {list(history[0].keys())[:10]}")
-        elif isinstance(history, dict):
-            # Dictionary format
-            if 'val_r1' in history:
-                val_r1_scores = history['val_r1']
-                best_r1 = max(val_r1_scores)
-                final_r1 = val_r1_scores[-1]
-                print(f"  ✓ Best R@1: {best_r1:.4f}% (epoch {val_r1_scores.index(best_r1) + 1})")
-                print(f"  ✓ Final R@1: {final_r1:.4f}% (epoch {len(val_r1_scores)})")
-            else:
-                print(f"  Available keys: {list(history.keys())[:10]}")
+                print(f"  ⚠️ No i2t_r1 found in records")
     
     except Exception as e:
         print(f"  ❌ Error: {e}")
@@ -67,4 +63,3 @@ print("\nTarget R@1 scores:")
 print("  Exp #1 Baseline: 6.61%")
 print("  Exp #3 Full SHARP: 6.21%")
 print("  Exp #4 v2a (Best): 8.77%")
-print("\nWhich directory matches 8.77%?")
