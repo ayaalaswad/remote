@@ -28,19 +28,34 @@ for name, path in experiments:
         with open(path, 'r') as f:
             history = json.load(f)
         
-        # Find best val_r1 score
-        if 'val_r1' in history:
-            val_r1_scores = history['val_r1']
-            if isinstance(val_r1_scores, list) and len(val_r1_scores) > 0:
+        # History is a list of epoch records
+        if isinstance(history, list):
+            # Find records with val_r1
+            val_r1_scores = []
+            for record in history:
+                if isinstance(record, dict) and 'val_r1' in record:
+                    val_r1_scores.append(record['val_r1'])
+            
+            if val_r1_scores:
+                best_r1 = max(val_r1_scores)
+                final_r1 = val_r1_scores[-1]
+                best_epoch = val_r1_scores.index(best_r1) + 1
+                print(f"  ✓ Best R@1: {best_r1:.4f}% (epoch {best_epoch})")
+                print(f"  ✓ Final R@1: {final_r1:.4f}% (epoch {len(val_r1_scores)})")
+            else:
+                print(f"  ⚠️ No val_r1 found in records")
+                if len(history) > 0:
+                    print(f"  Sample keys: {list(history[0].keys())[:10]}")
+        elif isinstance(history, dict):
+            # Dictionary format
+            if 'val_r1' in history:
+                val_r1_scores = history['val_r1']
                 best_r1 = max(val_r1_scores)
                 final_r1 = val_r1_scores[-1]
                 print(f"  ✓ Best R@1: {best_r1:.4f}% (epoch {val_r1_scores.index(best_r1) + 1})")
                 print(f"  ✓ Final R@1: {final_r1:.4f}% (epoch {len(val_r1_scores)})")
             else:
-                print(f"  ⚠️ val_r1 found but empty or not a list")
-        else:
-            # Check if it's in a different format
-            print(f"  Available keys: {list(history.keys())[:10]}")
+                print(f"  Available keys: {list(history.keys())[:10]}")
     
     except Exception as e:
         print(f"  ❌ Error: {e}")
