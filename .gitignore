@@ -89,3 +89,5 @@ p3_gallery_*.pt
 !*.py
 !*.md
 !*.bat
+*.pt
+*.pth
