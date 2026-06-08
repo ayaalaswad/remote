@@ -1,0 +1,99 @@
+{
+    "split": "val",
+    "epoch": 4,
+    "scores": {
+        "multiclass_accuracy": 77.47,
+        "multiclass_auroc": 0.5691683749823926
+    }
+}{
+    "split": "val",
+    "epoch": 6,
+    "scores": {
+        "multiclass_accuracy": 77.47,
+        "multiclass_auroc": 0.6031086817713476
+    }
+}{
+    "split": "val",
+    "epoch": 8,
+    "scores": {
+        "multiclass_accuracy": 75.32,
+        "multiclass_auroc": 0.6487775561992377
+    }
+}{
+    "split": "val",
+    "epoch": 10,
+    "scores": {
+        "multiclass_accuracy": 77.47,
+        "multiclass_auroc": 0.635393525155679
+    }
+}{
+    "split": "val",
+    "epoch": 12,
+    "scores": {
+        "multiclass_accuracy": 73.27,
+        "multiclass_auroc": 0.672702318328041
+    }
+}{
+    "split": "val",
+    "epoch": 14,
+    "scores": {
+        "multiclass_accuracy": 77.14,
+        "multiclass_auroc": 0.6764461932385735
+    }
+}{
+    "split": "val",
+    "epoch": 16,
+    "scores": {
+        "multiclass_accuracy": 72.45,
+        "multiclass_auroc": 0.6559102957275066
+    }
+}{
+    "split": "val",
+    "epoch": 18,
+    "scores": {
+        "multiclass_accuracy": 76.57,
+        "multiclass_auroc": 0.6716607045434881
+    }
+}{
+    "split": "val",
+    "epoch": 20,
+    "scores": {
+        "multiclass_accuracy": 72.9,
+        "multiclass_auroc": 0.6766299548604233
+    }
+}{
+    "split": "val",
+    "epoch": 22,
+    "scores": {
+        "multiclass_accuracy": 75.94,
+        "multiclass_auroc": 0.6831533136796584
+    }
+}{
+    "split": "val",
+    "epoch": 24,
+    "scores": {
+        "multiclass_accuracy": 72.82,
+        "multiclass_auroc": 0.6863585954319864
+    }
+}{
+    "split": "val",
+    "epoch": 26,
+    "scores": {
+        "multiclass_accuracy": 75.27,
+        "multiclass_auroc": 0.6826097153410923
+    }
+}{
+    "split": "val",
+    "epoch": 28,
+    "scores": {
+        "multiclass_accuracy": 73.32,
+        "multiclass_auroc": 0.6793527729771742
+    }
+}{
+    "split": "val",
+    "epoch": 30,
+    "scores": {
+        "multiclass_accuracy": 75.02,
+        "multiclass_auroc": 0.6899848486040194
+    }
+}

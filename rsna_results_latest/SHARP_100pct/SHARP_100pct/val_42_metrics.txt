@@ -1,0 +1,64 @@
+{
+    "split": "val",
+    "epoch": 9,
+    "scores": {
+        "multiclass_accuracy": 79.29,
+        "multiclass_auroc": 0.7803821598211291
+    }
+}{
+    "split": "val",
+    "epoch": 14,
+    "scores": {
+        "multiclass_accuracy": 78.47,
+        "multiclass_auroc": 0.7701708768575476
+    }
+}{
+    "split": "val",
+    "epoch": 19,
+    "scores": {
+        "multiclass_accuracy": 77.72,
+        "multiclass_auroc": 0.7389385514006996
+    }
+}{
+    "split": "val",
+    "epoch": 24,
+    "scores": {
+        "multiclass_accuracy": 77.17,
+        "multiclass_auroc": 0.7603056663646874
+    }
+}{
+    "split": "val",
+    "epoch": 29,
+    "scores": {
+        "multiclass_accuracy": 79.87,
+        "multiclass_auroc": 0.7894597694327914
+    }
+}{
+    "split": "val",
+    "epoch": 34,
+    "scores": {
+        "multiclass_accuracy": 80.24,
+        "multiclass_auroc": 0.7847969076565674
+    }
+}{
+    "split": "val",
+    "epoch": 39,
+    "scores": {
+        "multiclass_accuracy": 79.44,
+        "multiclass_auroc": 0.7722065552132171
+    }
+}{
+    "split": "val",
+    "epoch": 44,
+    "scores": {
+        "multiclass_accuracy": 79.37,
+        "multiclass_auroc": 0.7864209099274893
+    }
+}{
+    "split": "val",
+    "epoch": 49,
+    "scores": {
+        "multiclass_accuracy": 80.01,
+        "multiclass_auroc": 0.7922909139530843
+    }
+}

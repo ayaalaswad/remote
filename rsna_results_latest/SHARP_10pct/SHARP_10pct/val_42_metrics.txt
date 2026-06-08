@@ -1,0 +1,197 @@
+{
+    "split": "val",
+    "epoch": 4,
+    "scores": {
+        "multiclass_accuracy": 76.59,
+        "multiclass_auroc": 0.6842558834107587
+    }
+}{
+    "split": "val",
+    "epoch": 6,
+    "scores": {
+        "multiclass_accuracy": 75.22,
+        "multiclass_auroc": 0.7123072379913211
+    }
+}{
+    "split": "val",
+    "epoch": 8,
+    "scores": {
+        "multiclass_accuracy": 75.19,
+        "multiclass_auroc": 0.7320069128691051
+    }
+}{
+    "split": "val",
+    "epoch": 10,
+    "scores": {
+        "multiclass_accuracy": 77.67,
+        "multiclass_auroc": 0.7280783825545154
+    }
+}{
+    "split": "val",
+    "epoch": 12,
+    "scores": {
+        "multiclass_accuracy": 77.22,
+        "multiclass_auroc": 0.7305479027936772
+    }
+}{
+    "split": "val",
+    "epoch": 14,
+    "scores": {
+        "multiclass_accuracy": 77.32,
+        "multiclass_auroc": 0.7262640046734083
+    }
+}{
+    "split": "val",
+    "epoch": 16,
+    "scores": {
+        "multiclass_accuracy": 77.59,
+        "multiclass_auroc": 0.7436183950388653
+    }
+}{
+    "split": "val",
+    "epoch": 18,
+    "scores": {
+        "multiclass_accuracy": 76.97,
+        "multiclass_auroc": 0.7430258174353312
+    }
+}{
+    "split": "val",
+    "epoch": 20,
+    "scores": {
+        "multiclass_accuracy": 76.97,
+        "multiclass_auroc": 0.7395736730373079
+    }
+}{
+    "split": "val",
+    "epoch": 22,
+    "scores": {
+        "multiclass_accuracy": 78.49,
+        "multiclass_auroc": 0.7425488952494402
+    }
+}{
+    "split": "val",
+    "epoch": 24,
+    "scores": {
+        "multiclass_accuracy": 78.02,
+        "multiclass_auroc": 0.7406390614285785
+    }
+}{
+    "split": "val",
+    "epoch": 26,
+    "scores": {
+        "multiclass_accuracy": 76.57,
+        "multiclass_auroc": 0.7399585356558325
+    }
+}{
+    "split": "val",
+    "epoch": 28,
+    "scores": {
+        "multiclass_accuracy": 75.27,
+        "multiclass_auroc": 0.7171020220213635
+    }
+}{
+    "split": "val",
+    "epoch": 30,
+    "scores": {
+        "multiclass_accuracy": 76.49,
+        "multiclass_auroc": 0.7435783535959719
+    }
+}{
+    "split": "val",
+    "epoch": 4,
+    "scores": {
+        "multiclass_accuracy": 76.59,
+        "multiclass_auroc": 0.6843754714701145
+    }
+}{
+    "split": "val",
+    "epoch": 6,
+    "scores": {
+        "multiclass_accuracy": 75.24,
+        "multiclass_auroc": 0.7121654841332208
+    }
+}{
+    "split": "val",
+    "epoch": 8,
+    "scores": {
+        "multiclass_accuracy": 75.22,
+        "multiclass_auroc": 0.732003158983834
+    }
+}{
+    "split": "val",
+    "epoch": 10,
+    "scores": {
+        "multiclass_accuracy": 77.67,
+        "multiclass_auroc": 0.7281339758078182
+    }
+}{
+    "split": "val",
+    "epoch": 12,
+    "scores": {
+        "multiclass_accuracy": 77.24,
+        "multiclass_auroc": 0.730212555709445
+    }
+}{
+    "split": "val",
+    "epoch": 14,
+    "scores": {
+        "multiclass_accuracy": 77.27,
+        "multiclass_auroc": 0.7260870357963349
+    }
+}{
+    "split": "val",
+    "epoch": 16,
+    "scores": {
+        "multiclass_accuracy": 77.59,
+        "multiclass_auroc": 0.7435853250971898
+    }
+}{
+    "split": "val",
+    "epoch": 18,
+    "scores": {
+        "multiclass_accuracy": 77.02,
+        "multiclass_auroc": 0.7430488770162833
+    }
+}{
+    "split": "val",
+    "epoch": 20,
+    "scores": {
+        "multiclass_accuracy": 76.99,
+        "multiclass_auroc": 0.7395913699250152
+    }
+}{
+    "split": "val",
+    "epoch": 22,
+    "scores": {
+        "multiclass_accuracy": 78.52,
+        "multiclass_auroc": 0.7425705247788604
+    }
+}{
+    "split": "val",
+    "epoch": 24,
+    "scores": {
+        "multiclass_accuracy": 78.02,
+        "multiclass_auroc": 0.7406403127236689
+    }
+}{
+    "split": "val",
+    "epoch": 26,
+    "scores": {
+        "multiclass_accuracy": 76.57,
+        "multiclass_auroc": 0.7398752351540988
+    }
+}{
+    "split": "val",
+    "epoch": 28,
+    "scores": {
+        "multiclass_accuracy": 75.27,
+        "multiclass_auroc": 0.7171563639795759
+    }
+}{
+    "split": "val",
+    "epoch": 30,
+    "scores": {
+        "multiclass_accuracy": 76.49,
+        "multiclass_auroc": 0.7435865763922804
+    }
+}
