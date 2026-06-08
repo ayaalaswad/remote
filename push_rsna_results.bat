@@ -40,6 +40,10 @@ echo.
 echo [OK] Results copied
 echo.
 
+REM Configure git if not already set
+git config user.email "aya.alaswad@remote.com" 2>nul
+git config user.name "Aya Alaswad" 2>nul
+
 REM Add to git
 echo Adding to git...
 git add rsna_results_latest/
@@ -47,17 +51,7 @@ echo.
 
 REM Commit
 echo Committing...
-git commit -m "Add RSNA results (all checkpoints, excluding .pt files)
-
-Results from all RSNA experiments:
-- SHARP (original Exp #3)
-- SHARP_1pct, SHARP_10pct, SHARP_100pct (3 data regimes)
-- SHARP_EXP1_10pct (Exp #1 baseline checkpoint)
-- SHARP_EXP4v2a_10pct (Exp #4 v2a, best R@1 checkpoint)
-
-Checkpoint files (.pt) excluded to save space.
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+git commit -m "Add RSNA checkpoint comparison results (Exp1, Exp3, Exp4v2a)"
 
 if errorlevel 1 (
     echo.
