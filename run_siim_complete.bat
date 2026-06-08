@@ -23,11 +23,11 @@ echo Preprocessing complete! Starting training...
 echo ============================================================
 echo.
 
-REM Copy configs from local repo
+REM Copy configs from git repo to BenchX
 if not exist "BenchX\configs\classification\SIIM" mkdir "BenchX\configs\classification\SIIM"
-copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_1pct.yml BenchX\configs\classification\SIIM\sharp_siim_1pct.yml /Y
-copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_10pct.yml BenchX\configs\classification\SIIM\sharp_siim_10pct.yml /Y
-copy C:\Users\ZA\lawer\MyReasearch\sharp_siim_100pct.yml BenchX\configs\classification\SIIM\sharp_siim_100pct.yml /Y
+copy sharp_siim_1pct.yml BenchX\configs\classification\SIIM\sharp_siim_1pct.yml /Y
+copy sharp_siim_10pct.yml BenchX\configs\classification\SIIM\sharp_siim_10pct.yml /Y
+copy sharp_siim_100pct.yml BenchX\configs\classification\SIIM\sharp_siim_100pct.yml /Y
 
 echo Step 2: Training SIIM 1%%...
 cd BenchX
