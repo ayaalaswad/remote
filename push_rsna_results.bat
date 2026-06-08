@@ -18,21 +18,22 @@ echo Copying results (excluding .pt checkpoints)...
 echo.
 
 REM Copy each folder's logs and metrics (exclude .pt files)
+REM Use /S flag to search subdirectories (handles nested folder structure)
 for /D %%D in (BenchX\experiments\classification\rsna\*) do (
     echo Copying %%~nxD...
 
     if not exist "rsna_results_latest\%%~nxD" mkdir "rsna_results_latest\%%~nxD"
 
-    REM Copy .log files
-    xcopy "%%D\*.log" "rsna_results_latest\%%~nxD\" /Y /Q 2>nul
+    REM Copy .log files (search subdirectories)
+    xcopy "%%D\*.log" "rsna_results_latest\%%~nxD\" /Y /Q /S 2>nul
 
-    REM Copy .txt files
-    xcopy "%%D\*.txt" "rsna_results_latest\%%~nxD\" /Y /Q 2>nul
+    REM Copy .txt files (search subdirectories)
+    xcopy "%%D\*.txt" "rsna_results_latest\%%~nxD\" /Y /Q /S 2>nul
 
-    REM Copy .json files
-    xcopy "%%D\*.json" "rsna_results_latest\%%~nxD\" /Y /Q 2>nul
+    REM Copy .json files (search subdirectories)
+    xcopy "%%D\*.json" "rsna_results_latest\%%~nxD\" /Y /Q /S 2>nul
 
-    REM Skip .pt files (they're huge)
+    REM Skip .pt and .pth files (they're huge)
 )
 
 echo.
