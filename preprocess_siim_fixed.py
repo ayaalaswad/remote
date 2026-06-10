@@ -11,7 +11,7 @@ from PIL import Image
 import glob
 
 # Paths - update these on remote desktop
-data_path = r"C:\Users\aya.alaswad\Downloads\archive"
+data_path = r"C:\Users\aya.alaswad\Downloads\archive\siim-acr-pneumothorax"
 processed_datapath = r"C:\Users\aya.alaswad\remote\BenchX\datasets\SIIM"
 
 output_image_dir = os.path.join(processed_datapath, "images")
