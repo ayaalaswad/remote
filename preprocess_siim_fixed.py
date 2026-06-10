@@ -102,7 +102,14 @@ def split_seg_dataset(seed=42):
     label_col = None
     id_col = None
 
-    if 'EncodedPixels' in csv_data.columns or ' EncodedPixels' in csv_data.columns:
+    if 'has_pneumo' in csv_data.columns:
+        # Already preprocessed CSV with direct labels
+        label_col = 'has_pneumo'
+        id_col = 'ImageId'
+        print(f"\nUsing preprocessed format with direct labels")
+        print(f"  ID column: {id_col}")
+        print(f"  Label column: {label_col}")
+    elif 'EncodedPixels' in csv_data.columns or ' EncodedPixels' in csv_data.columns:
         label_col = 'EncodedPixels' if 'EncodedPixels' in csv_data.columns else ' EncodedPixels'
         id_col = 'ImageId' if 'ImageId' in csv_data.columns else ' ImageId'
         print(f"\nUsing EncodedPixels format (SIIM Kaggle dataset)")
@@ -132,14 +139,19 @@ def split_seg_dataset(seed=42):
             matches = csv_data[csv_data[id_col] == img_id]
 
         if len(matches) > 0:
-            # Get EncodedPixels value
-            encoded_pixels = matches[label_col].values[0]
+            # Get label value
+            label_value = matches[label_col].values[0]
 
-            # Assign label: has_pneumo=1 if EncodedPixels is not -1 or empty
-            if pd.isna(encoded_pixels) or encoded_pixels == -1 or encoded_pixels == '-1' or encoded_pixels == '':
-                has_pneumo = 0
+            # Assign label based on format
+            if label_col == 'has_pneumo':
+                # Direct label (0 or 1)
+                has_pneumo = int(label_value)
             else:
-                has_pneumo = 1
+                # EncodedPixels format - has_pneumo=1 if EncodedPixels is not -1 or empty
+                if pd.isna(label_value) or label_value == -1 or label_value == '-1' or label_value == '':
+                    has_pneumo = 0
+                else:
+                    has_pneumo = 1
 
             img_paths.append(img_path)
             img_labels.append(has_pneumo)
