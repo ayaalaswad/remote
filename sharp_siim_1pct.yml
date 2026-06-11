@@ -7,7 +7,7 @@ use_amp: True
 seed: 42
 
 dataset:
-  proto: SIIM_Dataset
+  proto: SIIM_Pneumothorax_Dataset
   data_path: datasets/SIIM
   split: "train_1"
   num_workers: 0
