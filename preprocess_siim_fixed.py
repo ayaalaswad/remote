@@ -105,7 +105,11 @@ def split_seg_dataset(seed=42):
     if 'has_pneumo' in csv_data.columns:
         # Already preprocessed CSV with direct labels
         label_col = 'has_pneumo'
-        id_col = 'ImageId'
+        # Use new_filename if available (renamed files), otherwise ImageId
+        if 'new_filename' in csv_data.columns:
+            id_col = 'new_filename'
+        else:
+            id_col = 'ImageId'
         print(f"\nUsing preprocessed format with direct labels")
         print(f"  ID column: {id_col}")
         print(f"  Label column: {label_col}")
@@ -127,11 +131,18 @@ def split_seg_dataset(seed=42):
     img_labels = []
 
     for img_path in tqdm(all_imgs, desc="Matching images to labels"):
-        # Get image ID (filename without extension)
-        img_id = os.path.basename(img_path).replace('.png', '')
+        # Get image filename
+        img_filename = os.path.basename(img_path)
+
+        # For new_filename column, use full filename with .png
+        # For ImageId column, remove .png extension
+        if id_col == 'new_filename':
+            img_id = img_filename  # Keep .png extension
+        else:
+            img_id = img_filename.replace('.png', '')  # Remove .png
 
         # Find label in CSV
-        # ImageId in CSV might have .dcm extension, so try both
+        # ImageId might have .dcm extension, so try both
         matches = csv_data[csv_data[id_col].str.replace('.dcm', '', regex=False) == img_id]
 
         if len(matches) == 0:
