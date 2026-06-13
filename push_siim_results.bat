@@ -47,6 +47,9 @@ REM Add to git
 echo Adding to git...
 git add siim_results_latest/
 
+REM Also add any modified config files
+git add sharp_*.yml 2>nul
+
 REM Commit
 echo.
 echo Committing...
