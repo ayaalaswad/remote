@@ -16,10 +16,17 @@ if not exist "rsna_lp_results" mkdir rsna_lp_results
 echo Copying results (excluding .pth checkpoints)...
 echo.
 
-set LP_DIR=BenchX\experiments\classification\rsna\SHARP_LP\SHARP_LP
+REM Try different possible paths
+set LP_DIR=BenchX\experiments\classification\rsna\SHARP_LP\SHARP_LinearProbe
+if not exist "%LP_DIR%" set LP_DIR=BenchX\experiments\classification\rsna\SHARP_LP
+if not exist "%LP_DIR%" set LP_DIR=BenchX\experiments\classification\rsna\SHARP_LP\SHARP_LP
 
 if not exist "%LP_DIR%" (
     echo [ERROR] Linear Probe results not found!
+    echo Searched paths:
+    echo - BenchX\experiments\classification\rsna\SHARP_LP\SHARP_LinearProbe
+    echo - BenchX\experiments\classification\rsna\SHARP_LP
+    echo - BenchX\experiments\classification\rsna\SHARP_LP\SHARP_LP
     echo.
     pause
     exit /b 1
