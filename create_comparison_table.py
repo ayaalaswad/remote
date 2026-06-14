@@ -119,8 +119,11 @@ def main():
     print("   - Clear improvement with more data (+10.5% from 1% to 100%)")
     print()
     print("🔬 RadDINO Hard Negatives:")
-    print("   - Training completed: 87,000 steps")
-    print("   - Checkpoint available for evaluation")
+    print("   - Training completed: 88,000 steps (early stopping)")
+    print("   - Best I->T R@1: 10.26% (at step 32,000)")
+    print("   - Final loss: 3.106")
+    print("   - Hard negatives ratio: 0.60")
+    print("   - Checkpoint: D:/experiments/exp_raddino_hardneg/p3_best.pt")
     print()
 
     # Save to file
@@ -166,6 +169,19 @@ def main():
         f.write("100%     0.6675   +0.0431 (+6.9% from 10%)\n")
         f.write("\n")
         f.write("Total improvement from 1% to 100%: +0.0638 (+10.6%)\n")
+
+        f.write("\n" + "="*120 + "\n")
+        f.write("RadDINO Hard Negatives Training\n")
+        f.write("="*120 + "\n\n")
+        f.write("Training completed: 88,000 steps (early stopping)\n")
+        f.write("Best I->T R@1: 10.26% (at step 32,000)\n")
+        f.write("Final loss: 3.106\n")
+        f.write("Hard negatives ratio: 0.60\n")
+        f.write("Best checkpoint: D:/experiments/exp_raddino_hardneg/p3_best.pt\n")
+        f.write("\n")
+        f.write("Key milestones:\n")
+        f.write("  Step 32,000: 10.26% R@1 (peak performance)\n")
+        f.write("  Step 88,000: Early stopping triggered\n")
 
     print(f"✓ Results saved to: FINAL_RESULTS_TABLE.txt")
     print()
