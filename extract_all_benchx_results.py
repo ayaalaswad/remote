@@ -77,34 +77,63 @@ def main():
 
     benchx_root = Path("C:/Users/aya.alaswad/remote/BenchX/experiments/classification")
 
-    # Define all experiments
+    # Helper function to find actual path
+    def find_experiment_path(base_paths):
+        """Try multiple possible paths and return the first that exists"""
+        if isinstance(base_paths, (str, Path)):
+            base_paths = [base_paths]
+        for path in base_paths:
+            p = Path(path)
+            if p.exists():
+                return p
+        return Path(base_paths[0]) if base_paths else None
+
+    # Define all experiments with multiple possible paths
     experiments = {
         "RSNA Fine-tuning (10%)": {
-            "path": benchx_root / "rsna/SHARP/SHARP",
+            "path": find_experiment_path([
+                benchx_root / "rsna/SHARP/SHARP",
+                benchx_root / "rsna/SHARP",
+                benchx_root / "RSNA/SHARP/SHARP",
+                benchx_root / "RSNA/SHARP",
+            ]),
             "dataset": "RSNA Pneumonia",
             "split": "10%",
             "method": "Fine-tuning"
         },
         "RSNA Linear Probe (10%)": {
-            "path": benchx_root / "rsna/SHARP_LP/SHARP_LinearProbe",
+            "path": find_experiment_path([
+                benchx_root / "rsna/SHARP_LP/SHARP_LinearProbe",
+                benchx_root / "rsna/SHARP_LP",
+                benchx_root / "RSNA/SHARP_LP/SHARP_LinearProbe",
+            ]),
             "dataset": "RSNA Pneumonia",
             "split": "10%",
             "method": "Linear Probe (Frozen)"
         },
         "SIIM 1%": {
-            "path": benchx_root / "siim/SHARP_1pct/SHARP_1pct",
+            "path": find_experiment_path([
+                benchx_root / "siim/SHARP_1pct/SHARP_1pct",
+                benchx_root / "siim/SHARP_1pct",
+            ]),
             "dataset": "SIIM Pneumothorax",
             "split": "1%",
             "method": "Fine-tuning"
         },
         "SIIM 10%": {
-            "path": benchx_root / "siim/SHARP_10pct/SHARP_10pct",
+            "path": find_experiment_path([
+                benchx_root / "siim/SHARP_10pct/SHARP_10pct",
+                benchx_root / "siim/SHARP_10pct",
+            ]),
             "dataset": "SIIM Pneumothorax",
             "split": "10%",
             "method": "Fine-tuning"
         },
         "SIIM 100%": {
-            "path": benchx_root / "siim/SHARP_100pct/SHARP_100pct",
+            "path": find_experiment_path([
+                benchx_root / "siim/SHARP_100pct/SHARP_100pct",
+                benchx_root / "siim/SHARP_100pct",
+            ]),
             "dataset": "SIIM Pneumothorax",
             "split": "100%",
             "method": "Fine-tuning"
@@ -121,9 +150,21 @@ def main():
 
         if results:
             all_results[name] = {**config, **results}
-            print(f"  ✓ AUROC: {results.get('best_auroc', 'N/A'):.4f}")
-            print(f"  ✓ Accuracy: {results.get('final_accuracy', 'N/A'):.2f}%")
-            print(f"  ✓ Epoch: {results.get('best_epoch', 'N/A')}")
+
+            # Format AUROC
+            auroc = results.get('best_auroc')
+            auroc_str = f"{auroc:.4f}" if auroc is not None else "N/A"
+
+            # Format Accuracy
+            acc = results.get('final_accuracy')
+            acc_str = f"{acc:.2f}%" if acc is not None else "N/A"
+
+            # Format Epoch
+            epoch = results.get('best_epoch', 'N/A')
+
+            print(f"  ✓ AUROC: {auroc_str}")
+            print(f"  ✓ Accuracy: {acc_str}")
+            print(f"  ✓ Epoch: {epoch}")
         else:
             print(f"  ✗ No results found")
 
@@ -140,8 +181,16 @@ def main():
         dataset = data['dataset']
         split = data['split']
         method = data['method']
-        auroc = f"{data.get('best_auroc', 0):.4f}" if 'best_auroc' in data else "N/A"
-        acc = f"{data.get('final_accuracy', 0):.2f}%" if 'final_accuracy' in data else "N/A"
+
+        # Format AUROC safely
+        best_auroc = data.get('best_auroc')
+        auroc = f"{best_auroc:.4f}" if best_auroc is not None else "N/A"
+
+        # Format Accuracy safely
+        final_acc = data.get('final_accuracy')
+        acc = f"{final_acc:.2f}%" if final_acc is not None else "N/A"
+
+        # Format Epoch
         epoch = str(data.get('best_epoch', 'N/A'))
 
         print(f"{exp_name:<30} {dataset:<20} {split:<8} {method:<20} {auroc:<10} {acc:<10} {epoch:<8}")
@@ -161,8 +210,16 @@ def main():
             dataset = data['dataset']
             split = data['split']
             method = data['method']
-            auroc = f"{data.get('best_auroc', 0):.4f}" if 'best_auroc' in data else "N/A"
-            acc = f"{data.get('final_accuracy', 0):.2f}%" if 'final_accuracy' in data else "N/A"
+
+            # Format AUROC safely
+            best_auroc = data.get('best_auroc')
+            auroc = f"{best_auroc:.4f}" if best_auroc is not None else "N/A"
+
+            # Format Accuracy safely
+            final_acc = data.get('final_accuracy')
+            acc = f"{final_acc:.2f}%" if final_acc is not None else "N/A"
+
+            # Format Epoch
             epoch = str(data.get('best_epoch', 'N/A'))
 
             f.write(f"{exp_name:<30} {dataset:<20} {split:<8} {method:<20} {auroc:<10} {acc:<10} {epoch:<8}\n")
@@ -182,11 +239,13 @@ def main():
         # Add SHARP results
         for name, data in all_results.items():
             if 'RSNA' in name and 'Fine-tuning' in data['method']:
-                auroc = data.get('best_auroc', 0)
-                f.write(f"SHARP (Fine-tune)   {auroc:.3f}    43.1%\n")
+                auroc = data.get('best_auroc')
+                if auroc is not None:
+                    f.write(f"SHARP (Fine-tune)   {auroc:.3f}    43.1%\n")
             elif 'RSNA' in name and 'Linear Probe' in data['method']:
-                auroc = data.get('best_auroc', 0)
-                f.write(f"SHARP (Linear)      {auroc:.3f}    N/A\n")
+                auroc = data.get('best_auroc')
+                if auroc is not None:
+                    f.write(f"SHARP (Linear)      {auroc:.3f}    N/A\n")
 
     print(f"\n✓ Results saved to: {output_file.absolute()}")
     print()
