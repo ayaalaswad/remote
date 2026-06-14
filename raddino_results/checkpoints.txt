@@ -1,0 +1,4 @@
+p3_best.pt
+p3_gallery_imgs.pt
+p3_gallery_txts.pt
+p3_last.pt

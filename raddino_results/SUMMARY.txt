@@ -1,0 +1,14 @@
+RadDINO Hard Negatives Training Results 
+========================================== 
+ 
+Training completed at step 88,000 (early stopping) 
+Best I->T R@1: 10.26% (at step 32,000) 
+ 
+Configuration: 
+- Batch size: 256 
+- Hard negatives enabled 
+- Early stopping: 10 evals without improvement 
+ 
+Best checkpoint: D:\experiments\exp_raddino_hardneg\p3_best.pt 
+Last checkpoint: D:\experiments\exp_raddino_hardneg\p3_last.pt 
+ 
