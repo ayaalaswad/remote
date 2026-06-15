@@ -84,9 +84,19 @@ def main():
 
     # Define all experiments with possible paths
     experiments = {
-        "RSNA Fine-tuning (10%)": [
+        "RSNA 1%": [
+            benchx_root / "rsna/SHARP_1pct/SHARP_1pct",
+            benchx_root / "rsna/SHARP_1pct",
+        ],
+        "RSNA 10%": [
+            benchx_root / "rsna/SHARP_10pct/SHARP_10pct",
+            benchx_root / "rsna/SHARP_10pct",
             benchx_root / "rsna/SHARP/SHARP",
             benchx_root / "rsna/SHARP",
+        ],
+        "RSNA 100%": [
+            benchx_root / "rsna/SHARP_100pct/SHARP_100pct",
+            benchx_root / "rsna/SHARP_100pct",
         ],
         "RSNA Linear Probe (10%)": [
             benchx_root / "rsna/SHARP_LP/SHARP_LinearProbe",
@@ -161,13 +171,26 @@ def main():
 
         # Group by dataset
         print("\n" + "="*80)
-        print("RSNA Results (10% data)")
+        print("RSNA Results (Data Scaling)")
         print("="*80)
-        for name, m in all_results.items():
-            if 'RSNA' in name:
-                print(f"\n{name}:")
-                print(f"  F1: {m['f1']:.2f}%")
-                print(f"  Precision: {m['precision']:.2f}%, Recall: {m['recall']:.2f}%")
+        rsna_splits = ["RSNA 1%", "RSNA 10%", "RSNA 100%"]
+        print(f"\n{'Split':<15} {'F1':<10} {'Precision':<12} {'Recall':<10} {'Specificity':<12}")
+        print("-" * 65)
+        for split in rsna_splits:
+            if split in all_results:
+                m = all_results[split]
+                print(f"{split:<15} {m['f1']:>8.2f}% {m['precision']:>10.2f}% {m['recall']:>8.2f}% {m['specificity']:>10.2f}%")
+
+        if "RSNA Linear Probe (10%)" in all_results:
+            print("\n" + "="*80)
+            print("RSNA Linear Probe vs Fine-tuning (10%)")
+            print("="*80)
+            lp = all_results["RSNA Linear Probe (10%)"]
+            ft = all_results.get("RSNA 10%", {})
+            if ft:
+                print(f"\nFine-tuning:  F1 = {ft['f1']:.2f}%")
+                print(f"Linear Probe: F1 = {lp['f1']:.2f}%")
+                print(f"Gap: {ft['f1'] - lp['f1']:+.2f}%")
 
         print("\n" + "="*80)
         print("SIIM Results (Data Scaling)")
