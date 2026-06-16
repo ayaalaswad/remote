@@ -46,7 +46,24 @@ def diagnose_and_fix():
 
     if label_col is None:
         print("[ERROR] Could not find label column!")
-        return False
+        print(f"      Available columns: {list(df.columns)}")
+        print()
+        print("      Trying to find any column with binary values (0/1)...")
+        # Try to find any column with binary 0/1 values
+        for col in df.columns:
+            if df[col].dtype in ['int64', 'float64', 'int32', 'float32']:
+                unique_vals = df[col].unique()
+                if len(unique_vals) == 2 and set(unique_vals) == {0, 1}:
+                    print(f"      Found binary column: '{col}'")
+                    label_col = col
+                    break
+
+        if label_col is None:
+            print("      Could not find any binary column!")
+            return False
+        else:
+            print(f"      Using '{label_col}' as label column")
+            print()
 
     print(f"[2/4] Analyzing current distribution")
     n_pos = (df[label_col] == 1).sum()
