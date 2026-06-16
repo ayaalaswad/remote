@@ -51,17 +51,17 @@ cd BenchX
 
 REM Launch each training in a new CMD window
 echo Launching SIIM 1%%...
-start "SIIM 1%%" cmd /k "python bin/train.py configs/classification/SIIM/sharp_siim_1pct.yml"
+start "SIIM 1%%" cmd /k "python bin/train.py ../sharp_siim_1pct.yml"
 
 timeout /t 2 >nul
 
 echo Launching SIIM 10%%...
-start "SIIM 10%%" cmd /k "python bin/train.py configs/classification/SIIM/sharp_siim_10pct.yml"
+start "SIIM 10%%" cmd /k "python bin/train.py ../sharp_siim_10pct.yml"
 
 timeout /t 2 >nul
 
 echo Launching SIIM 100%%...
-start "SIIM 100%%" cmd /k "python bin/train.py configs/classification/SIIM/sharp_siim_100pct.yml"
+start "SIIM 100%%" cmd /k "python bin/train.py ../sharp_siim_100pct.yml"
 
 cd ..
 

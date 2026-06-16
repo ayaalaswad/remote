@@ -54,7 +54,7 @@ echo [1/3] Training SIIM 1%%...
 echo Started at %time%
 echo.
 
-python bin/train.py configs/classification/SIIM/sharp_siim_1pct.yml
+python bin/train.py ../sharp_siim_1pct.yml
 
 if errorlevel 1 (
     echo.
@@ -72,7 +72,7 @@ echo [2/3] Training SIIM 10%%...
 echo Started at %time%
 echo.
 
-python bin/train.py configs/classification/SIIM/sharp_siim_10pct.yml
+python bin/train.py ../sharp_siim_10pct.yml
 
 if errorlevel 1 (
     echo.
@@ -90,7 +90,7 @@ echo [3/3] Training SIIM 100%%...
 echo Started at %time%
 echo.
 
-python bin/train.py configs/classification/SIIM/sharp_siim_100pct.yml
+python bin/train.py ../sharp_siim_100pct.yml
 
 if errorlevel 1 (
     echo.
