@@ -94,9 +94,9 @@ def main():
     base_path = Path("C:/Users/aya.alaswad/remote/BenchX/experiments/classification/siim")
 
     experiments = {
-        "SIIM 1%": base_path / "SHARP_1pct" / "SHARP_1pct",
-        "SIIM 10%": base_path / "SHARP_10pct" / "SHARP_10pct",
-        "SIIM 100%": base_path / "SHARP_100pct" / "SHARP_100pct",
+        "SIIM 1%": base_path / "SHARP_1pct",
+        "SIIM 10%": base_path / "SHARP_10pct",
+        "SIIM 100%": base_path / "SHARP_100pct",
     }
 
     results = {}
