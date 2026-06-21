@@ -21,7 +21,7 @@ model:
   cnn:
     pretrained: D:/experiments/exp3_full_sharp/p3_best_timm.pt
     num_classes: 0
-    global_pool: token
+    global_pool: avg
     permute: no_permute
     freeze: False
 
