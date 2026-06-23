@@ -173,7 +173,8 @@ $K{=}(\text{region},\text{entity},\text{polarity})$, defined below.
   triplets; ViT-B/16 and Bi-LSTM embeddings are contrasted via multi-positive
   InfoNCE (Eq.~\ref{eq:mpinfonce}) with curriculum hard negatives
   $\rho(s)$ (Eq.~\ref{eq:curriculum}).
-  \emph{Stage~2 (bottom):} Pretrained ViT-B/16 transferred to CXRMate.}
+  \emph{Stage~2 (bottom):} Pretrained ViT-B/16 transferred to CXRMate.
+  Abbreviations: anat.\ = anatomy-hard; neg.\ = negation-hard.}
 \label{fig:overview}
 \end{figure}
 
@@ -256,7 +257,8 @@ after a warmup~\cite{curriculumlearning}:
   \label{eq:curriculum}
 \end{equation}
 with $s_\text{warm}{=}5{,}000$, $\rho_\text{max}{=}0.60$, and
-$s_\text{ramp}{=}30{,}000$.
+$s_\text{ramp}{=}30{,}000$, where $s_\mathrm{ramp} > s_\mathrm{warm}$ by
+construction (30,000 $>$ 5,000), so the denominator is never zero.
 When $s_\text{ramp} = s_\text{warm}$, we define $\rho(s) = \rho_\text{max}$ for all $s \geq s_\text{warm}$.
 When injected, 25\,\% of the batch (up to 8 pairs) are replaced by
 hard-negative samples, allowing the model to first acquire coarse
@@ -528,8 +530,8 @@ ImageNet-FT    & ImageNet encoder              & 0.262 & 0.537 & 0.206 \\
 \midrule
 (A)            & Sym.\ InfoNCE                 & 0.297 & 0.567 & 0.220 \\
 (B)            & MP-InfoNCE                    & 0.286 & 0.556 & 0.216 \\
-(C)            & $+$curriculum ($s_\text{ramp}{=}5$k)    & 0.274$^{\dagger}$ & 0.557 & 0.215 \\
-(D)            & $+$curriculum ($s_\text{ramp}{=}30$k), no pol.\ HN & 0.281 & 0.562 & 0.218 \\
+(C)            & $+$curriculum ($s_\mathrm{ramp}{=}5$k)    & 0.274$^{\dagger}$ & 0.557 & 0.215 \\
+(D)            & $+$curriculum ($s_\mathrm{ramp}{=}30$k), no pol.\ HN & 0.281 & 0.562 & 0.218 \\
 \textbf{SHARP} & $+$polarity HN (full)         & \textbf{0.303}$^{***}$ & \textbf{0.579}$^{**}$ & \textbf{0.223}$^{**}$ \\
 \bottomrule
 \end{tabular}
