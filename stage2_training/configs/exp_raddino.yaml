@@ -1,0 +1,29 @@
+exp_dir: experiments
+dataset_dir: D:/datasets
+ckpt_zoo_dir: checkpoints
+
+module: modules.lightning_modules.single
+definition: SingleCXR
+
+strategy: auto
+devices: 1
+num_workers: 5
+
+vit_ckpt_path: D:/experiments/exp_raddino_hardneg/p3_best.pt
+
+sections_to_evaluate:
+- report
+max_images_per_study: 5
+lr: 5.0e-05
+max_epochs: 10
+mbatch_size: 8
+accumulated_mbatch_size: 32
+every_n_epochs: 1
+monitor: val_report_chexbert_f1_macro
+monitor_mode: max
+precision: 16
+deterministic: false
+decoder_max_len: 256
+num_test_beams: 4
+enable_progress_bar: true
+weights_summary: full

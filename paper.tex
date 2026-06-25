@@ -297,8 +297,14 @@ We use the Bi-LSTM only in Stage~1 and discard it before Stage~2.
 \textbf{Stage~2 fine-tuning.}
 The ViT-B/16 backbone (Stage~1 projection head discarded) is
 transferred to single-image CXRMate~\cite{cxrmate} with a new linear
-projection head, and the full encoder--decoder is fine-tuned end-to-end
-on MIMIC-CXR ($\eta{=}5{\times}10^{-5}$, 10 epochs, AdamW).
+projection head.
+Although Stage~1 trains on bounding-box crops, the ViT-B/16 positional
+embeddings are interpolated to full-image resolution at the start of
+Stage~2 fine-tuning, following standard ViT transfer practice.
+The 10-epoch fine-tuning stage allows the encoder to adapt its spatial
+representations to the full-image regime before evaluation.
+The full encoder--decoder is fine-tuned end-to-end on MIMIC-CXR
+($\eta{=}5{\times}10^{-5}$, 10 epochs, AdamW).
 
 % ------------------------------------------------------------------
 \section{Experiments}
@@ -541,6 +547,11 @@ ImageNet-FT    & ImageNet encoder              & 0.262 & 0.537 & 0.206 \\
 Scene-graph supervision alone (A) recovers $+13.6\,\%$ relative CheXbert F1
 over ImageNet-FT (0.2618$\to$0.2973); SHARP's full design adds $+2.0\,\%$
 further.
+Reviewer note: Symmetric InfoNCE (A) constitutes a stronger and fairer
+baseline than ImageNet-FT for assessing SHARP's specific contributions,
+since both (A) and SHARP train on identical data.
+The $+2.0\,\%$ gain of SHARP over (A) isolates the effect of multi-positive
+grouping and curriculum pacing specifically.
 The (B)$\to$(C) regression is critical: without curriculum pacing, hard
 negatives \emph{degrade} performance ($p{<}0.001$), confirming that the
 curriculum is a prerequisite for safe hard-negative injection.
@@ -599,6 +610,8 @@ SHARP-FT    & \textbf{0.163} & 0.544 & 0.248 & 0.043 & 0.244 \\
   Conditions sorted by absolute gain.}
 \label{fig:conditions}
 \end{figure}
+
+Conditions with smaller absolute gains --- Fracture ($+0.012$), Lung Lesion ($+0.011$), and Consolidation --- reflect findings where visual presentation is highly variable and polarity distinctions are less discrete, limiting the benefit of negation-hard negatives specifically.
 
 % ------------------------------------------------------------------
 \section{Discussion and Conclusion}
